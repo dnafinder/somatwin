@@ -1,4 +1,4 @@
-/// Modello corporeo parametrico: sezioni ellittiche impilate lungo uno scheletro.
+/// Modello corporeo parametrico: sezioni ellittiche interpolate con curve morbide.
 ///
 /// Le sezioni misurate (collo, vita, fianchi, polso, polpaccio) hanno la
 /// circonferenza esatta. Le altre sono stimate da proporzioni medie e
@@ -10,7 +10,8 @@ import 'dart:math' as math;
 
 import '../core/models.dart';
 
-const int kRingPoints = 24;
+/// Punti per ogni sezione.
+const int kRingPoints = 20;
 
 class Vec3 {
   final double x;
@@ -60,18 +61,21 @@ class Ring {
 class BodyPart {
   final String name;
 
-  /// Sezioni in ordine di quota crescente.
+  /// Sezioni di definizione (quelle con tag sono le misurate).
   final List<Ring> rings;
+
+  /// Sezioni interpolate, in ordine di quota crescente.
+  final List<Ring> sections;
 
   /// Se true esiste la copia speculare (x -> -x).
   final bool mirrored;
 
-  const BodyPart(this.name, this.rings, {this.mirrored = false});
+  const BodyPart(this.name, this.rings, this.sections, {this.mirrored = false});
 
   double get volume {
     var v = 0.0;
-    for (var i = 0; i + 1 < rings.length; i++) {
-      v += (rings[i + 1].y - rings[i].y) * (rings[i].area + rings[i + 1].area) / 2;
+    for (var i = 0; i + 1 < sections.length; i++) {
+      v += (sections[i + 1].y - sections[i].y) * (sections[i].area + sections[i + 1].area) / 2;
     }
     return mirrored ? 2 * v : v;
   }
@@ -126,14 +130,12 @@ BodyModel buildBody(Measurements m) {
 
   var lo = kScaleMin;
   var hi = kScaleMax;
-  final vLo = _volume(_parts(m, lo));
-  final vHi = _volume(_parts(m, hi));
   double s;
   var fitted = true;
-  if (target <= vLo) {
+  if (target <= _volume(_parts(m, lo))) {
     s = lo;
     fitted = false;
-  } else if (target >= vHi) {
+  } else if (target >= _volume(_parts(m, hi))) {
     s = hi;
     fitted = false;
   } else {
@@ -167,79 +169,129 @@ double _volume(List<BodyPart> parts) {
 }
 
 Ring _ell(double y, double circ, double q,
-    {double cx = 0, double cz = 0, bool measured = false, String? tag}) {
+    {double cx = 0, double cz = 0, String? tag}) {
   final a = semiAxis(circ, q);
-  return Ring(y: y, a: a, b: q * a, cx: cx, cz: cz, measured: measured, tag: tag);
+  return Ring(y: y, a: a, b: q * a, cx: cx, cz: cz, measured: tag != null, tag: tag);
 }
+
+/// Chiude le estremita' con tre sezioni che si restringono.
+List<Ring> _cap(List<Ring> r, double d) {
+  const f = [
+    [2.5, 0.12],
+    [2.0, 0.45],
+    [1.2, 0.80],
+  ];
+  Ring shrink(Ring o, double dy, double s) =>
+      Ring(y: o.y + dy, a: o.a * s, b: o.b * s, cx: o.cx, cz: o.cz);
+  final out = <Ring>[];
+  for (final e in f) {
+    out.add(shrink(r.first, -e[0] * d, e[1]));
+  }
+  out.addAll(r);
+  for (final e in f.reversed) {
+    out.add(shrink(r.last, e[0] * d, e[1]));
+  }
+  return out;
+}
+
+double _field(Ring r, int f) {
+  switch (f) {
+    case 0:
+      return r.a;
+    case 1:
+      return r.b;
+    case 2:
+      return r.cx;
+    default:
+      return r.cz;
+  }
+}
+
+/// Interpolazione cubica (Catmull-Rom) tra le sezioni, quota lineare.
+List<Ring> _loft(List<Ring> r, int n) {
+  final out = <Ring>[];
+  final cnt = r.length;
+  final span = r.last.y - r.first.y;
+  double tg(int i, int f) {
+    if (i == 0) return _field(r[1], f) - _field(r[0], f);
+    if (i == cnt - 1) return _field(r[cnt - 1], f) - _field(r[cnt - 2], f);
+    return (_field(r[i + 1], f) - _field(r[i - 1], f)) / 2;
+  }
+
+  for (var i = 0; i < cnt - 1; i++) {
+    final c = math.max(2, (n * (r[i + 1].y - r[i].y) / span).round());
+    for (var k = 0; k < c; k++) {
+      final t = k / c;
+      final t2 = t * t;
+      final t3 = t2 * t;
+      final v = List<double>.filled(4, 0);
+      for (var f = 0; f < 4; f++) {
+        v[f] = (2 * t3 - 3 * t2 + 1) * _field(r[i], f) +
+            (t3 - 2 * t2 + t) * tg(i, f) +
+            (-2 * t3 + 3 * t2) * _field(r[i + 1], f) +
+            (t3 - t2) * tg(i + 1, f);
+      }
+      final tag = (k == 0) ? r[i].tag : null;
+      out.add(Ring(
+        y: r[i].y + (r[i + 1].y - r[i].y) * t,
+        a: math.max(0.05, v[0]),
+        b: math.max(0.05, v[1]),
+        cx: v[2],
+        cz: v[3],
+        measured: tag != null,
+        tag: tag,
+      ));
+    }
+  }
+  final l = r.last;
+  out.add(Ring(y: l.y, a: math.max(0.05, l.a), b: math.max(0.05, l.b), cx: l.cx, cz: l.cz, tag: l.tag, measured: l.tag != null));
+  return out;
+}
+
+BodyPart _part(String name, List<Ring> defs, double capD, int n, {bool mirrored = false}) =>
+    BodyPart(name, defs, _loft(_cap(defs, capD), n), mirrored: mirrored);
 
 List<BodyPart> _parts(Measurements m, double s) {
   final h = m.height;
   final avg = (m.waist + m.hip) / 2;
   final chest = 1.07 * avg * s;
 
-  // Torace e bacino
-  final hipRing = _ell(0.52 * h, m.hip, 0.75, measured: true, tag: 'hip');
-  final shoulder = _ell(0.81 * h, 0.98 * chest, 0.55);
-  final torso = BodyPart('torso', [
-    _ell(0.47 * h, 0.96 * m.hip * s, 0.75),
-    hipRing,
-    _ell(0.615 * h, m.waist, 0.78, measured: true, tag: 'waist'),
-    _ell(0.72 * h, chest, 0.70),
-    shoulder,
-    _ell(0.84 * h, 1.12 * m.neck, 1.0),
-  ]);
-
-  final neck = BodyPart('neck', [
-    _ell(0.84 * h, 1.12 * m.neck, 1.0),
-    _ell(0.855 * h, m.neck, 1.0, measured: true, tag: 'neck'),
-    _ell(0.87 * h, m.neck, 1.0),
-  ]);
-
-  // Gambe (una sola, specchiata)
+  final hipRing = _ell(0.52 * h, m.hip, 0.75, cz: -0.006 * h, tag: 'hip');
+  final belly = 0.004 * h +
+      0.02 * h * ((m.waist / m.hip - 0.85) / 0.25).clamp(0.0, 1.0).toDouble();
+  final shoulderA = semiAxis(0.98 * chest, 0.55);
   final legX = 0.5 * hipRing.a;
-  final leg = BodyPart(
-    'leg',
-    [
-      _ell(0.04 * h, 0.62 * m.calf * s, 1.0, cx: legX),
-      _ell(0.20 * h, m.calf, 1.0, cx: legX, measured: true, tag: 'calf'),
-      _ell(0.285 * h, 0.38 * m.hip * s, 1.0, cx: legX),
-      _ell(0.39 * h, 0.52 * m.hip * s, 1.0, cx: legX),
-      _ell(0.47 * h, 0.57 * m.hip * s, 1.0, cx: legX),
-    ],
-    mirrored: true,
-  );
-
-  final footA = semiAxis(0.62 * m.calf * s, 1.0);
-  final foot = BodyPart(
-    'foot',
-    [
-      Ring(y: 0.004 * h, a: 0.030 * h, b: 0.065 * h, cx: legX, cz: 0.055 * h),
-      Ring(y: 0.020 * h, a: 0.034 * h, b: 0.070 * h, cx: legX, cz: 0.050 * h),
-      Ring(y: 0.040 * h, a: footA, b: footA, cx: legX),
-    ],
-    mirrored: true,
-  );
-
-  // Braccia
   final ua = 0.30 * avg * s;
-  final armX0 = shoulder.a - 2.0;
+  final armX0 = shoulderA - 2.0;
   double armCx(double y) => armX0 + (0.80 * h - y) * 0.2;
-  Ring armRing(double y, double circ,
-          {bool measured = false, String? tag}) =>
-      _ell(y, circ, 1.0, cx: armCx(y), measured: measured, tag: tag);
-  final arm = BodyPart(
-    'arm',
+  Ring arm(double y, double circ, {String? tag}) =>
+      _ell(y, circ, 1.0, cx: armCx(y), tag: tag);
+
+  final torso = _part(
+    'torso',
     [
-      armRing(0.43 * h, 1.2 * m.wrist * s),
-      armRing(0.485 * h, m.wrist, measured: true, tag: 'wrist'),
-      armRing(0.55 * h, 0.90 * ua),
-      armRing(0.63 * h, 0.87 * ua),
-      armRing(0.80 * h, ua),
+      _ell(0.47 * h, 0.96 * m.hip * s, 0.75, cz: -0.004 * h),
+      hipRing,
+      _ell(0.615 * h, m.waist, 0.78, cz: belly, tag: 'waist'),
+      _ell(0.72 * h, chest, 0.70, cz: 0.008 * h),
+      _ell(0.81 * h, 0.98 * chest, 0.55, cz: -0.004 * h),
+      _ell(0.84 * h, 1.12 * m.neck, 1.0),
     ],
-    mirrored: true,
+    1.0,
+    46,
   );
 
-  // Testa: ellissoide
+  final neck = _part(
+    'neck',
+    [
+      _ell(0.84 * h, 1.12 * m.neck, 1.0),
+      _ell(0.855 * h, m.neck, 1.0, cz: 0.004 * h, tag: 'neck'),
+      _ell(0.87 * h, m.neck, 1.0, cz: 0.008 * h),
+    ],
+    0.5,
+    8,
+  );
+
   final yc = 0.935 * h;
   final rh = 0.065 * h;
   final ah = semiAxis(0.327 * h, 1.2);
@@ -247,14 +299,51 @@ List<BodyPart> _parts(Measurements m, double s) {
   for (var k = -4; k <= 4; k++) {
     final t = k / 4.0;
     final sc = math.max(0.15, math.sqrt(math.max(0.0, 1 - t * t)));
-    headRings.add(Ring(
-      y: yc + t * rh,
-      a: ah * sc,
-      b: 1.2 * ah * sc,
-      cz: 0.012 * h,
-    ));
+    headRings.add(Ring(y: yc + t * rh, a: ah * sc, b: 1.2 * ah * sc, cz: 0.012 * h));
   }
-  final head = BodyPart('head', headRings);
+  final head = _part('head', headRings, 0.6, 16);
 
-  return [torso, neck, leg, foot, arm, head];
+  final ankle = _ell(0.04 * h, 0.62 * m.calf * s, 1.0, cx: legX);
+  final leg = _part(
+    'leg',
+    [
+      ankle,
+      _ell(0.20 * h, m.calf, 1.0, cx: legX, tag: 'calf'),
+      _ell(0.285 * h, 0.38 * m.hip * s, 1.0, cx: legX),
+      _ell(0.39 * h, 0.52 * m.hip * s, 1.0, cx: legX),
+      _ell(0.47 * h, 0.57 * m.hip * s, 1.0, cx: legX),
+    ],
+    0.6,
+    40,
+    mirrored: true,
+  );
+
+  final foot = _part(
+    'foot',
+    [
+      Ring(y: 0.004 * h, a: 0.030 * h, b: 0.065 * h, cx: legX, cz: 0.055 * h),
+      Ring(y: 0.020 * h, a: 0.034 * h, b: 0.070 * h, cx: legX, cz: 0.050 * h),
+      Ring(y: 0.040 * h, a: ankle.a, b: ankle.b, cx: legX),
+    ],
+    0.3,
+    8,
+    mirrored: true,
+  );
+
+  final armPart = _part(
+    'arm',
+    [
+      arm(0.43 * h, 1.2 * m.wrist * s),
+      arm(0.485 * h, m.wrist, tag: 'wrist'),
+      arm(0.55 * h, 0.90 * ua),
+      arm(0.63 * h, 0.87 * ua),
+      arm(0.72 * h, 0.98 * ua),
+      arm(0.80 * h, ua),
+    ],
+    0.7,
+    34,
+    mirrored: true,
+  );
+
+  return [torso, neck, head, leg, foot, armPart];
 }
