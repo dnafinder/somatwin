@@ -90,6 +90,34 @@ class _InputScreenState extends State<InputScreen> {
     super.dispose();
   }
 
+  /// Dati grezzi del soggetto del referto CARDIOMET (maschio, 57 anni).
+  void _fillDemo() {
+    const v = {
+      'weight': '87',
+      'height': '173',
+      'waist': '107',
+      'hip': '103',
+      'wrist': '18',
+      'neck': '40',
+      'calf': '38',
+      'sbp': '128',
+      'dbp': '87',
+      'hr': '61',
+    };
+    final now = DateTime.now();
+    setState(() {
+      v.forEach((k, t) => _ctrl[k]!.text = t);
+      _sex = Sex.male;
+      _birth = DateTime(now.year - 57, 1, 1);
+      _birthError = null;
+      _anamnesis = true;
+      _smoker = false;
+      _parents = 1;
+      _drugs = false;
+    });
+    _form.currentState?.validate();
+  }
+
   Future<void> _pickBirth() async {
     final now = DateTime.now();
     final d = await showDatePicker(
@@ -163,6 +191,14 @@ class _InputScreenState extends State<InputScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            if (widget.edit == null) ...[
+              OutlinedButton.icon(
+                onPressed: _fillDemo,
+                icon: const Icon(Icons.science_outlined),
+                label: const Text('Demo: dati del referto'),
+              ),
+              const SizedBox(height: 12),
+            ],
             SegmentedButton<Sex>(
               segments: const [
                 ButtonSegment(value: Sex.male, label: Text('Maschio')),
