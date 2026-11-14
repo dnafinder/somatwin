@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import 'core/absi_table.dart';
@@ -21,8 +22,9 @@ class DigitalTwinApp extends StatelessWidget {
       title: 'Somatwin',
       debugShowCheckedModeBanner: false,
       theme: buildTheme(),
-      // Testo più grande: su telefono (web e APK) i corpi 11-12 erano illeggibili.
+      // Solo versione web: nel browser del telefono il testo risulta più piccolo che nell'APK.
       builder: (context, child) {
+        if (!kIsWeb) return child!;
         final mq = MediaQuery.of(context);
         return MediaQuery(
           data: mq.copyWith(textScaler: TextScaler.linear(mq.textScaler.scale(1.0) * 1.25)),
