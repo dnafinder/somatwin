@@ -190,7 +190,7 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
   v['LORENZ'] = iwl;
   v['CREFF'] = iwc;
   add(gA, 'GRANT', 'Rapporto altezza/polso (indice di Grant)', _f(gi, 1),
-      reference: '${_f(gLo, 1)} - ${_f(gHi, 1)}', comment: morpho);
+      comment: morpho);
   add(gA, 'LORENZ', 'Peso ideale (Lorenz)', _f(iwl), unit: 'kg');
   add(gA, 'CREFF', 'Peso ideale (Creff)', _f(iwc), unit: 'kg');
 
@@ -458,24 +458,24 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
   v['LBM_BOER'] = boer;
   v['LBM_HUME'] = hume;
   v['LBM_JAMES'] = james;
-  add(gB, 'LBM', 'Massa magra da altezza e peso (Boer / Hume / James)',
-      '${_f(boer)} / ${_f(hume)} / ${_f(james)}', unit: 'kg',
-      comment: 'Stime indipendenti dal grasso: possono differire di qualche kg');
+  final lbmMean = (boer + hume + james) / 3;
+  v['LBM'] = lbmMean;
+  add(gB, 'LBM', 'Massa magra da altezza e peso (media di Boer, Hume, James)', _f(lbmMean), unit: 'kg');
 
   // ---------------------------------------------------------------- Energia
   const gE = 'Metabolismo';
   final bmr = mround(10 * w + 6.25 * h - 5 * age + 5 - 166 * sex);
   v['BMR'] = bmr;
-  add(gE, 'BMR', 'Metabolismo basale (Mifflin-St Jeor)', _f(bmr, 0), unit: 'kcal/die');
   final bee = mround(sex == 0
       ? 66 + 13.7 * w + 5 * h - 6.8 * age
       : 655 + 9.6 * w + 1.8 * h - 4.7 * age);
   v['BEE'] = bee;
-  add(gE, 'BEE', 'Dispendio energetico basale (Harris-Benedict)', _f(bee, 0), unit: 'kcal/die');
   final katch = 370 + 21.6 * ffm;
   v['KATCH'] = katch;
-  add(gE, 'KATCH', 'Metabolismo basale (Katch-McArdle, su massa magra stimata)', _f(katch, 0),
-      unit: 'kcal/die');
+  final bmrMean = (bmr + bee + katch) / 3;
+  v['BMR_MEAN'] = bmrMean;
+  add(gE, 'BMR_MEAN', 'Metabolismo basale (media di Mifflin-St Jeor, Harris-Benedict, Katch-McArdle)',
+      _f(bmrMean, 0), unit: 'kcal/die');
 
   // ---------------------------------------------------------------- Cuore e pressione
   const gC = 'Cuore e pressione';

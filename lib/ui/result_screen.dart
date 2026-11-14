@@ -272,7 +272,7 @@ class _ResultScreenState extends State<ResultScreen> {
         title: Text(r.label),
         subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text('prima: ${p.value} ${p.unit}'),
-          RangeBar(reference: r.reference, value: a ?? double.tryParse(r.value)),
+          _under(r, a),
         ]),
         trailing: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.end, children: [
           Text('${r.value} ${r.unit}', style: TextStyle(color: sevColor(r.severity), fontWeight: FontWeight.w600)),
@@ -282,6 +282,17 @@ class _ResultScreenState extends State<ResultScreen> {
     }
     return ListView(padding: const EdgeInsets.all(12), children: rows);
   }
+}
+
+/// Sotto il valore: barra di riferimento; per l'indice di Grant il morfotipo.
+Widget _under(IndexResult r, double? value) {
+  if (r.key == 'GRANT') {
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Text(r.comment, style: const TextStyle(fontSize: 13)),
+    );
+  }
+  return RangeBar(reference: r.reference, value: value ?? double.tryParse(r.value));
 }
 
 class _ResultTile extends StatelessWidget {
@@ -300,7 +311,7 @@ class _ResultTile extends StatelessWidget {
             Expanded(child: Text(r.label)),
             Text('${r.value} ${r.unit}'.trim(), style: TextStyle(color: c, fontWeight: FontWeight.w700)),
           ]),
-          RangeBar(reference: r.reference, value: value ?? double.tryParse(r.value)),
+          _under(r, value),
         ]),
       ),
     );
