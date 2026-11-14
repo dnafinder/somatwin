@@ -6,6 +6,7 @@ import '../core/models.dart';
 import '../storage.dart';
 import '../twin/body_model.dart';
 import '../twin/twin_view.dart';
+import 'confirm.dart';
 import 'input_screen.dart';
 import 'theme.dart';
 
@@ -94,6 +95,13 @@ class _ResultScreenState extends State<ResultScreen> {
     ));
   }
 
+  Future<void> _delete() async {
+    if (!await confirmDelete(context, fmtDate(widget.record.m.takenOn))) return;
+    await Storage().delete(widget.record.id);
+    if (!mounted) return;
+    Navigator.of(context).pop();
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasPrev = _prevReport != null;
@@ -107,6 +115,11 @@ class _ResultScreenState extends State<ResultScreen> {
               tooltip: 'Correggi i dati',
               icon: const Icon(Icons.edit_outlined),
               onPressed: _edit,
+            ),
+            IconButton(
+              tooltip: 'Elimina la misura',
+              icon: const Icon(Icons.delete_outline),
+              onPressed: _delete,
             ),
           ],
           bottom: TabBar(tabs: [

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/absi_table.dart';
 import '../core/models.dart';
 import '../storage.dart';
+import 'confirm.dart';
 import 'input_screen.dart';
 import 'result_screen.dart';
 import 'theme.dart';
@@ -56,6 +57,12 @@ class _HomeScreenState extends State<HomeScreen> {
     await _reload();
   }
 
+  Future<void> _delete(Record rec) async {
+    if (!await confirmDelete(context, fmtDate(rec.m.takenOn))) return;
+    await _storage.delete(rec.id);
+    await _reload();
+  }
+
   Future<void> _edit(Record rec) async {
     final fixed = await Navigator.of(context).push<Record>(
       MaterialPageRoute(builder: (_) => InputScreen(edit: rec)),
@@ -64,9 +71,6 @@ class _HomeScreenState extends State<HomeScreen> {
     await _storage.update(fixed);
     await _reload();
   }
-
-  String _date(DateTime d) =>
-      '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
 
   @override
   Widget build(BuildContext context) {
@@ -103,32 +107,30 @@ class _HomeScreenState extends State<HomeScreen> {
                         padding: const EdgeInsets.only(right: 20),
                         child: const Icon(Icons.delete),
                       ),
-                      confirmDismiss: (_) async =>
-                          await showDialog<bool>(
-                            context: context,
-                            builder: (c) => AlertDialog(
-                              title: const Text('Eliminare la misura?'),
-                              content: const Text('L\'operazione non si puo\' annullare.'),
-                              actions: [
-                                TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Annulla')),
-                                TextButton(onPressed: () => Navigator.pop(c, true), child: const Text('Elimina')),
-                              ],
-                            ),
-                          ) ??
-                          false,
+                      confirmDismiss: (_) => confirmDelete(context, fmtDate(r.m.takenOn)),
                       onDismissed: (_) async {
                         await _storage.delete(r.id);
                         await _reload();
                       },
                       child: Card(
                         child: ListTile(
-                          title: Text(_date(r.m.takenOn)),
+                          title: Text(fmtDate(r.m.takenOn)),
                           subtitle: Text(
                               '${r.m.sex.label}, ${r.m.age} anni, ${r.m.weight.toStringAsFixed(1)} kg, ${r.m.height.toStringAsFixed(0)} cm'),
-                          trailing: IconButton(
-                            tooltip: 'Correggi i dati',
-                            icon: const Icon(Icons.edit_outlined),
-                            onPressed: () => _edit(r),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                tooltip: 'Correggi i dati',
+                                icon: const Icon(Icons.edit_outlined),
+                                onPressed: () => _edit(r),
+                              ),
+                              IconButton(
+                                tooltip: 'Elimina la misura',
+                                icon: const Icon(Icons.delete_outline),
+                                onPressed: () => _delete(r),
+                              ),
+                            ],
                           ),
                           onTap: () => _open(r),
                         ),
