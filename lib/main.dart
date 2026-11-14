@@ -21,6 +21,14 @@ class DigitalTwinApp extends StatelessWidget {
       title: 'Somatwin',
       debugShowCheckedModeBanner: false,
       theme: buildTheme(),
+      // Testo più grande: su telefono (web e APK) i corpi 11-12 erano illeggibili.
+      builder: (context, child) {
+        final mq = MediaQuery.of(context);
+        return MediaQuery(
+          data: mq.copyWith(textScaler: TextScaler.linear(mq.textScaler.scale(1.0) * 1.25)),
+          child: child!,
+        );
+      },
       home: HomeScreen(absi: absi),
     );
   }

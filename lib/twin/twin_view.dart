@@ -352,13 +352,13 @@ class TwinPainter extends CustomPainter {
       final text = labels[e.key];
       if (text == null) continue;
       var y = e.value.dy;
-      if (y - lastY < 17) y = lastY + 17;
+      if (y - lastY < 21) y = lastY + 21;
       lastY = y;
       final color = _sevColor(e.key);
       final tp = TextPainter(
         text: TextSpan(
             text: text,
-            style: const TextStyle(color: Color(0xFFE8EEF3), fontSize: 12, fontWeight: FontWeight.w600)),
+            style: const TextStyle(color: Color(0xFFE8EEF3), fontSize: 15, fontWeight: FontWeight.w600)),
         textDirection: TextDirection.ltr,
       )..layout();
       final x = math.min(size.width - tp.width - 6, math.max(e.value.dx + 16, size.width * 0.64));
