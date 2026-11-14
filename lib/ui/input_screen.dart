@@ -195,7 +195,7 @@ class _InputScreenState extends State<InputScreen> {
               OutlinedButton.icon(
                 onPressed: _fillDemo,
                 icon: const Icon(Icons.science_outlined),
-                label: const Text('Demo: dati del referto'),
+                label: const Text('Demo'),
               ),
               const SizedBox(height: 12),
             ],
