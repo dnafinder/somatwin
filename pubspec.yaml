@@ -21,3 +21,4 @@ flutter:
   assets:
     - assets/absi_male.csv
     - assets/absi_female.csv
+    - assets/mh/body.bin

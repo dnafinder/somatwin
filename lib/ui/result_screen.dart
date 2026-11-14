@@ -5,6 +5,9 @@ import '../core/indices.dart';
 import '../core/models.dart';
 import '../storage.dart';
 import '../twin/body_model.dart';
+import '../twin/mh_body.dart';
+import '../twin/mh_data.dart';
+import '../twin/mh_view.dart';
 import '../twin/twin_view.dart';
 import 'confirm.dart';
 import 'input_screen.dart';
@@ -26,6 +29,9 @@ class _ResultScreenState extends State<ResultScreen> {
   late final Report? _prevReport;
   late final BodyModel _body;
   late final BodyModel? _prevBody;
+  MhBody? _mhBody;
+  MhBody? _mhPrev;
+  bool _mhFailed = false;
   String? _selected;
 
   @override
@@ -37,6 +43,28 @@ class _ResultScreenState extends State<ResultScreen> {
     final p = widget.previous;
     _prevReport = p == null ? null : computeReport(p.m, p.an, widget.absi);
     _prevBody = p == null ? null : buildBody(p.m);
+    _loadMh();
+  }
+
+  /// Costruisce il corpo MakeHuman fuori dal primo frame. In caso di errore
+  /// resta il modello a sezioni.
+  Future<void> _loadMh() async {
+    try {
+      final data = await MhData.shared();
+      await Future<void>.delayed(const Duration(milliseconds: 60));
+      final now = MhBody.build(data, widget.record.m);
+      if (!mounted) return;
+      setState(() => _mhBody = now);
+      final p = widget.previous;
+      if (p != null) {
+        await Future<void>.delayed(const Duration(milliseconds: 30));
+        final prev = MhBody.build(data, p.m);
+        if (!mounted) return;
+        setState(() => _mhPrev = prev);
+      }
+    } catch (e) {
+      if (mounted) setState(() => _mhFailed = true);
+    }
   }
 
   Map<String, String> _labels() {
@@ -149,14 +177,31 @@ class _ResultScreenState extends State<ResultScreen> {
     ]);
     return Column(children: [
       Expanded(
-        child: TwinView(
-          model: _body,
-          previous: _prevBody,
-          severity: _report.body,
-          labels: _labels(),
-          heartRate: widget.record.m.hr,
-          onTapPart: _tap,
-        ),
+        child: _mhBody != null
+            ? MhTwinView(
+                body: _mhBody!,
+                previous: widget.previous == null ? null : _mhPrev,
+                severity: _report.body,
+                labels: _labels(),
+                heartRate: widget.record.m.hr,
+                onTapPart: _tap,
+              )
+            : _mhFailed
+                ? TwinView(
+                    model: _body,
+                    previous: _prevBody,
+                    severity: _report.body,
+                    labels: _labels(),
+                    heartRate: widget.record.m.hr,
+                    onTapPart: _tap,
+                  )
+                : const Center(
+                    child: Column(mainAxisSize: MainAxisSize.min, children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 12),
+                      Text('Costruzione del modello'),
+                    ]),
+                  ),
       ),
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -164,9 +209,13 @@ class _ResultScreenState extends State<ResultScreen> {
           legend,
           const SizedBox(height: 4),
           Text(
-            'Anelli pieni: misurati. Tratteggiati: stimati'
-            '${_body.volumeFitted ? '' : ' (peso e misure poco coerenti)'}.'
-            '${_prevBody != null ? ' In grigio: misura precedente.' : ''}',
+            _mhBody != null
+                ? 'Il corpo rispetta altezza, collo, vita, fianchi, polpaccio e polso misurati.'
+                    '${_mhBody!.fit.volumeFitted ? '' : ' Il volume resta sotto il peso rilevato.'}'
+                    '${_mhPrev != null ? ' In grigio: misura precedente.' : ''}'
+                : 'Anelli pieni: misurati. Tratteggiati: stimati'
+                    '${_body.volumeFitted ? '' : ' (peso e misure poco coerenti)'}.'
+                    '${_prevBody != null ? ' In grigio: misura precedente.' : ''}',
             style: const TextStyle(fontSize: 11),
           ),
         ]),
