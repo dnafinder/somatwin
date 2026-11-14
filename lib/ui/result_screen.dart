@@ -220,7 +220,7 @@ class _ResultScreenState extends State<ResultScreen> {
       rows.add(ListTile(
         dense: true,
         title: Text(r.label),
-        subtitle: Text('prima: ${p.value} ${p.unit}'),
+        subtitle: Text('Riferimento: ${r.reference.isEmpty ? '\u2014' : r.reference}\nmisura precedente: ${p.value} ${p.unit}'.trim()),
         trailing: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.end, children: [
           Text('${r.value} ${r.unit}', style: TextStyle(color: sevColor(r.severity), fontWeight: FontWeight.w600)),
           if (delta.isNotEmpty) Text(delta, style: const TextStyle(fontSize: 11)),
@@ -248,11 +248,10 @@ class _ResultTile extends StatelessWidget {
             Expanded(child: Text(r.label)),
             Text('${r.value} ${r.unit}'.trim(), style: TextStyle(color: c, fontWeight: FontWeight.w700)),
           ]),
-          if (r.reference.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 4, left: 18),
-              child: Text('Riferimento: ${r.reference}', style: const TextStyle(fontSize: 11)),
-            ),
+          Padding(
+            padding: const EdgeInsets.only(top: 4, left: 18),
+            child: Text('Riferimento: ${r.reference.isEmpty ? '\u2014' : r.reference}', style: const TextStyle(fontSize: 11)),
+          ),
           if (r.comment.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 4, left: 18),

@@ -150,7 +150,7 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
   final bmic = bmiClassic(w, h);
   v['BMI_CLASSIC'] = bmic;
   add(gA, 'BMI_CLASSIC', 'BMI classico (peso/altezza^2)', _f(bmic, 2),
-      unit: 'kg/m2', comment: 'Solo confronto: gli indici usano il BMI di Trefethen');
+      unit: 'kg/m2', reference: '18.5 - 25', comment: 'Solo confronto: gli indici usano il BMI di Trefethen');
   final pi3 = w / _pw(hm, 3);
   v['PI'] = pi3;
   add(gA, 'PI', 'Indice ponderale', _f(pi3, 1), unit: 'kg/m3');
