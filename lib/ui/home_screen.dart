@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/absi_table.dart';
+import '../core/models.dart';
 import '../storage.dart';
 import 'input_screen.dart';
 import 'result_screen.dart';

@@ -21,6 +21,8 @@ jobs:
         run: flutter create --platforms=android --org it.medylab --project-name digital_twin .
       - name: Nome dell'app sul telefono
         run: sed -i 's/android:label="[^"]*"/android:label="Somatwin"/' android/app/src/main/AndroidManifest.xml
+      - name: Rimuovi il test d'esempio generato da flutter create
+        run: rm -f test/widget_test.dart
       - run: flutter pub get
       - run: flutter test
       - run: flutter build apk --release
