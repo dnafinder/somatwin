@@ -8,6 +8,7 @@ import '../twin/body_model.dart';
 import '../twin/twin_view.dart';
 import 'confirm.dart';
 import 'input_screen.dart';
+import 'range_bar.dart';
 import 'theme.dart';
 
 class ResultScreen extends StatefulWidget {
@@ -77,7 +78,7 @@ class _ResultScreenState extends State<ResultScreen> {
           Text(_labels()[tag] ?? tag, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           if (rows.isEmpty) const Text('Nessun indice collegato.'),
-          for (final r in rows) _ResultTile(r),
+          for (final r in rows) _ResultTile(r, _report.values[r.key]),
         ],
       ),
     );
@@ -186,7 +187,7 @@ class _ResultScreenState extends State<ResultScreen> {
             padding: const EdgeInsets.only(top: 12, bottom: 4),
             child: Text(e.key, style: Theme.of(context).textTheme.titleMedium),
           ),
-          for (final r in e.value) _ResultTile(r),
+          for (final r in e.value) _ResultTile(r, _report.values[r.key]),
         ],
         if (_report.zonesFcmax.isNotEmpty) ...[
           Padding(
@@ -220,7 +221,10 @@ class _ResultScreenState extends State<ResultScreen> {
       rows.add(ListTile(
         dense: true,
         title: Text(r.label),
-        subtitle: Text('Riferimento: ${r.reference.isEmpty ? '\u2014' : r.reference}\nmisura precedente: ${p.value} ${p.unit}'.trim()),
+        subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('prima: ${p.value} ${p.unit}'),
+          RangeBar(reference: r.reference, value: a ?? double.tryParse(r.value)),
+        ]),
         trailing: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.end, children: [
           Text('${r.value} ${r.unit}', style: TextStyle(color: sevColor(r.severity), fontWeight: FontWeight.w600)),
           if (delta.isNotEmpty) Text(delta, style: const TextStyle(fontSize: 11)),
@@ -233,7 +237,8 @@ class _ResultScreenState extends State<ResultScreen> {
 
 class _ResultTile extends StatelessWidget {
   final IndexResult r;
-  const _ResultTile(this.r);
+  final double? value;
+  const _ResultTile(this.r, this.value);
 
   @override
   Widget build(BuildContext context) {
@@ -243,20 +248,10 @@ class _ResultTile extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            Icon(Icons.circle, size: 10, color: c),
-            const SizedBox(width: 8),
             Expanded(child: Text(r.label)),
             Text('${r.value} ${r.unit}'.trim(), style: TextStyle(color: c, fontWeight: FontWeight.w700)),
           ]),
-          Padding(
-            padding: const EdgeInsets.only(top: 4, left: 18),
-            child: Text('Riferimento: ${r.reference.isEmpty ? '\u2014' : r.reference}', style: const TextStyle(fontSize: 11)),
-          ),
-          if (r.comment.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 4, left: 18),
-              child: Text(r.comment, style: const TextStyle(fontSize: 12)),
-            ),
+          RangeBar(reference: r.reference, value: value ?? double.tryParse(r.value)),
         ]),
       ),
     );
