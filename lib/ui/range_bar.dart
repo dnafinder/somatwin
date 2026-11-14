@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-const Color kBarBlue = Color(0xFF4FA3D9);
+const Color kBarBlue = Color(0xFF8FDCFF);
 const Color kBarGreen = Color(0xFF2FA96B);
 const Color kBarRed = Color(0xFFD9534F);
 
