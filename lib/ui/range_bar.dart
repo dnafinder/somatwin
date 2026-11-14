@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-const Color kBarBlue = Color(0xFF8FDCFF);
-const Color kBarGreen = Color(0xFF2FA96B);
+const Color kBarBlue = Color(0xFF00E5FF);
+const Color kBarGreen = Color(0xFF3CB043);
 const Color kBarRed = Color(0xFFD9534F);
 
 /// Intervallo di riferimento letto dal testo: "a - b", "< x", "> x".
