@@ -439,7 +439,14 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
   add(gB, 'FM', 'Massa grassa (da CUN-BAE)', _f(fm), unit: 'kg');
   add(gB, 'FFM', 'Massa magra (da CUN-BAE)', _f(ffm), unit: 'kg');
   add(gB, 'FMI', 'Fat Mass Index', _f(fm / (hm * hm)), unit: 'kg/m2');
-  add(gB, 'FFMI', 'Fat-Free Mass Index', _f(ffm / (hm * hm)), unit: 'kg/m2');
+  // Riferimento FFMI: Schutz, Kyle, Pichard, Int J Obes 2002 (5-95 percentile, BIA).
+  // Uomini: nessuna variazione significativa con l'eta'. Donne: dato per 18-34 anni.
+  final ffmiRef = sex == 0
+      ? '16.8 - 21.1'
+      : (age <= 34 ? '13.8 - 17.6' : '');
+  add(gB, 'FFMI', 'Fat-Free Mass Index', _f(ffm / (hm * hm)), unit: 'kg/m2',
+      reference: ffmiRef,
+      comment: ffmiRef.isEmpty ? '' : 'Riferimento Schutz 2002 (bioimpedenza); valore da CUN-BAE');
 
   final boer = sex == 0 ? 0.407 * w + 0.267 * h - 19.2 : 0.252 * w + 0.473 * h - 48.3;
   final hume = sex == 0
