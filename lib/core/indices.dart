@@ -784,11 +784,38 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
 
   return Report(
     age: age,
-    results: out,
+    results: _ordered(out),
     values: v,
     body: body,
     zonesFcmax: zonesFc,
     zonesKarvonen: zonesKa,
     notes: notes,
   );
+}
+
+/// Ordine di visualizzazione dentro ogni gruppo: prima gli indici di uso
+/// corrente, poi quelli derivati. Le chiavi non elencate restano in coda,
+/// nell'ordine di calcolo.
+const _order = <String>[
+  // Antropometria
+  'BMI', 'BMI_CLASSIC', 'PI', 'W_RANGE', 'LORENZ', 'CREFF', 'GRANT', 'NECK', 'CALFCORR', 'BSA', 'BVOL',
+  // Distribuzione del grasso
+  'WHTR', 'WHR', 'ABSI_Z', 'BRI', 'CI', 'AVI', 'BAI',
+  // Composizione corporea
+  'BF_CUN', 'RFM', 'NAVY', 'FM', 'FFM', 'FMI', 'FFMI', 'LBM',
+  // Metabolismo
+  'BMR_MEAN',
+  // Cuore e pressione: pressione, frequenza, emodinamica, vasi
+  'BP', 'PP', 'MAP', 'HR', 'HRR', 'FCM', 'MSI', 'RPP', 'SV', 'CO', 'CIDX', 'LCWI', 'SVRI', 'AI', 'EPWV',
+];
+
+List<IndexResult> _ordered(List<IndexResult> list) {
+  final pos = <String, int>{for (var i = 0; i < _order.length; i++) _order[i]: i};
+  final indexed = [for (var i = 0; i < list.length; i++) MapEntry(i, list[i])];
+  indexed.sort((a, b) {
+    final pa = pos[a.value.key] ?? 1000 + a.key;
+    final pb = pos[b.value.key] ?? 1000 + b.key;
+    return pa.compareTo(pb);
+  });
+  return [for (final e in indexed) e.value];
 }
