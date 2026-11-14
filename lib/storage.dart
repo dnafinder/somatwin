@@ -48,6 +48,18 @@ class Storage {
     await _save(list);
   }
 
+  /// Sostituisce una misura esistente (correzione di un errore di inserimento).
+  Future<void> update(Record r) async {
+    final list = await load();
+    final i = list.indexWhere((x) => x.id == r.id);
+    if (i >= 0) {
+      list[i] = r;
+    } else {
+      list.add(r);
+    }
+    await _save(list);
+  }
+
   Future<void> delete(String id) async {
     final list = await load();
     list.removeWhere((r) => r.id == id);

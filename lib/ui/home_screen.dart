@@ -47,12 +47,22 @@ class _HomeScreenState extends State<HomeScreen> {
     _open(rec);
   }
 
-  void _open(Record rec) {
+  Future<void> _open(Record rec) async {
     final idx = _records.indexWhere((r) => r.id == rec.id);
     final prev = (idx >= 0 && idx + 1 < _records.length) ? _records[idx + 1] : null;
-    Navigator.of(context).push(MaterialPageRoute(
+    await Navigator.of(context).push(MaterialPageRoute(
       builder: (_) => ResultScreen(record: rec, previous: prev, absi: widget.absi),
     ));
+    await _reload();
+  }
+
+  Future<void> _edit(Record rec) async {
+    final fixed = await Navigator.of(context).push<Record>(
+      MaterialPageRoute(builder: (_) => InputScreen(edit: rec)),
+    );
+    if (fixed == null) return;
+    await _storage.update(fixed);
+    await _reload();
   }
 
   String _date(DateTime d) =>
@@ -115,7 +125,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           title: Text(_date(r.m.takenOn)),
                           subtitle: Text(
                               '${r.m.sex.label}, ${r.m.age} anni, ${r.m.weight.toStringAsFixed(1)} kg, ${r.m.height.toStringAsFixed(0)} cm'),
-                          trailing: const Icon(Icons.chevron_right),
+                          trailing: IconButton(
+                            tooltip: 'Correggi i dati',
+                            icon: const Icon(Icons.edit_outlined),
+                            onPressed: () => _edit(r),
+                          ),
                           onTap: () => _open(r),
                         ),
                       ),

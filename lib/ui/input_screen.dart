@@ -29,7 +29,10 @@ const _fields = [
 class InputScreen extends StatefulWidget {
   /// Ultima misura: precompila sesso, data di nascita e anamnesi.
   final Record? template;
-  const InputScreen({super.key, this.template});
+
+  /// Misura da correggere: precompila tutti i campi e ne mantiene id e data.
+  final Record? edit;
+  const InputScreen({super.key, this.template, this.edit});
 
   @override
   State<InputScreen> createState() => _InputScreenState();
@@ -49,7 +52,7 @@ class _InputScreenState extends State<InputScreen> {
   @override
   void initState() {
     super.initState();
-    final t = widget.template;
+    final t = widget.edit ?? widget.template;
     if (t != null) {
       _sex = t.m.sex;
       _birth = t.m.birthDate;
@@ -57,6 +60,25 @@ class _InputScreenState extends State<InputScreen> {
       _smoker = t.an.smoker;
       _parents = t.an.parentsHypertensive;
       _drugs = t.an.onAntihypertensives;
+    }
+    final e = widget.edit;
+    if (e != null) {
+      final m = e.m;
+      final vals = {
+        'weight': m.weight,
+        'height': m.height,
+        'waist': m.waist,
+        'hip': m.hip,
+        'wrist': m.wrist,
+        'neck': m.neck,
+        'calf': m.calf,
+        'sbp': m.sbp,
+        'dbp': m.dbp,
+        'hr': m.hr,
+      };
+      vals.forEach((k, v) {
+        _ctrl[k]!.text = v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toString();
+      });
     }
   }
 
@@ -108,7 +130,7 @@ class _InputScreenState extends State<InputScreen> {
     final m = Measurements(
       sex: _sex,
       birthDate: _birth!,
-      takenOn: now,
+      takenOn: widget.edit?.m.takenOn ?? now,
       weight: _v('weight'),
       height: _v('height'),
       waist: _v('waist'),
@@ -126,7 +148,7 @@ class _InputScreenState extends State<InputScreen> {
       parentsHypertensive: _anamnesis ? _parents : 0,
       onAntihypertensives: _anamnesis && _drugs,
     );
-    Navigator.of(context).pop(Record(now.microsecondsSinceEpoch.toString(), m, an));
+    Navigator.of(context).pop(Record(widget.edit?.id ?? now.microsecondsSinceEpoch.toString(), m, an));
   }
 
   String _fmtDate(DateTime d) =>
@@ -135,7 +157,7 @@ class _InputScreenState extends State<InputScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Nuova misura')),
+      appBar: AppBar(title: Text(widget.edit == null ? 'Nuova misura' : 'Correggi la misura')),
       body: Form(
         key: _form,
         child: ListView(
@@ -220,7 +242,7 @@ class _InputScreenState extends State<InputScreen> {
             FilledButton.icon(
               onPressed: _submit,
               icon: const Icon(Icons.accessibility_new),
-              label: const Text('Genera il gemello digitale'),
+              label: Text(widget.edit == null ? 'Genera il gemello digitale' : 'Salva la correzione'),
             ),
           ],
         ),

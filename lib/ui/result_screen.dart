@@ -6,6 +6,7 @@ import '../core/models.dart';
 import '../storage.dart';
 import '../twin/body_model.dart';
 import '../twin/twin_view.dart';
+import 'input_screen.dart';
 import 'theme.dart';
 
 class ResultScreen extends StatefulWidget {
@@ -81,6 +82,18 @@ class _ResultScreenState extends State<ResultScreen> {
     );
   }
 
+  Future<void> _edit() async {
+    final fixed = await Navigator.of(context).push<Record>(
+      MaterialPageRoute(builder: (_) => InputScreen(edit: widget.record)),
+    );
+    if (fixed == null || !mounted) return;
+    await Storage().update(fixed);
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(MaterialPageRoute(
+      builder: (_) => ResultScreen(record: fixed, previous: widget.previous, absi: widget.absi),
+    ));
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasPrev = _prevReport != null;
@@ -89,6 +102,13 @@ class _ResultScreenState extends State<ResultScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Il tuo Somatwin'),
+          actions: [
+            IconButton(
+              tooltip: 'Correggi i dati',
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: _edit,
+            ),
+          ],
           bottom: TabBar(tabs: [
             const Tab(text: 'Twin'),
             const Tab(text: 'Indici'),
