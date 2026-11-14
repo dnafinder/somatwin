@@ -27,6 +27,11 @@ jobs:
       - name: Nome dell'app nel browser
         run: |
           sed -i 's#<title>[^<]*</title>#<title>Somatwin</title>#' web/index.html
+          # Senza viewport il telefono disegna la pagina larga ~980 px e rimpicciolisce tutto.
+          if ! grep -q 'name="viewport"' web/index.html; then
+            sed -i 's#<head>#<head>\n  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">#' web/index.html
+          fi
+          grep -n viewport web/index.html
           sed -i 's#"name": "[^"]*"#"name": "Somatwin"#; s#"short_name": "[^"]*"#"short_name": "Somatwin"#' web/manifest.json
       - run: rm -f test/widget_test.dart
       - run: flutter pub get
