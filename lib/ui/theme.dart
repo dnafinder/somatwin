@@ -50,3 +50,7 @@ const String kDisclaimer =
     'Gli indici sono stime calcolate da misure e dati dichiarati. Non sono una diagnosi: '
     'l\'interpretazione clinica compete al medico. Il modello 3D e\' una ricostruzione '
     'parametrica: solo le sezioni misurate sono esatte.';
+
+/// Fattore di ingrandimento del testo disegnato a mano (etichette del modello 3D).
+/// Lo imposta main.dart in base alla larghezza reale della pagina (solo web).
+double kLabelScale = 1.0;

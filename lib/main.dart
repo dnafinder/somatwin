@@ -26,8 +26,13 @@ class DigitalTwinApp extends StatelessWidget {
       builder: (context, child) {
         if (!kIsWeb) return child!;
         final mq = MediaQuery.of(context);
+        // Pagina ben dimensionata (~400 px di larghezza): ingrandimento lieve.
+        // Se il browser del telefono la disegna larga (~1000 px) e poi la
+        // rimpicciolisce, il fattore cresce in proporzione.
+        final f = (mq.size.width / 400 * 1.2).clamp(1.2, 3.2).toDouble();
+        kLabelScale = f;
         return MediaQuery(
-          data: mq.copyWith(textScaler: TextScaler.linear(mq.textScaler.scale(1.0) * 1.25)),
+          data: mq.copyWith(textScaler: TextScaler.linear(mq.textScaler.scale(1.0) * f)),
           child: child!,
         );
       },

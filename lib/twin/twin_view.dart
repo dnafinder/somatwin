@@ -354,14 +354,14 @@ class TwinPainter extends CustomPainter {
       final text = labels[e.key];
       if (text == null) continue;
       var y = e.value.dy;
-      final gap = kIsWeb ? 21.0 : 17.0;
+      final gap = 17.0 * (kIsWeb ? kLabelScale : 1.0);
       if (y - lastY < gap) y = lastY + gap;
       lastY = y;
       final color = _sevColor(e.key);
       final tp = TextPainter(
         text: TextSpan(
             text: text,
-            style: const TextStyle(color: Color(0xFFE8EEF3), fontSize: kIsWeb ? 15 : 12, fontWeight: FontWeight.w600)),
+            style: TextStyle(color: Color(0xFFE8EEF3), fontSize: 12 * (kIsWeb ? kLabelScale : 1.0), fontWeight: FontWeight.w600)),
         textDirection: TextDirection.ltr,
       )..layout();
       final x = math.min(size.width - tp.width - 6, math.max(e.value.dx + 16, size.width * 0.64));
