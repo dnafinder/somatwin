@@ -31,6 +31,17 @@ class RefRange {
   }
 }
 
+/// Colore della zona in cui cade il valore, lo stesso della barra.
+/// Null se la barra non c'e' (riferimento assente o valore non numerico).
+Color? zoneColor(String reference, double? v) {
+  final r = RefRange.parse(reference);
+  if (v == null || r == null) return null;
+  final lo = r.lo, hi = r.hi;
+  if (lo != null && hi != null) return v < lo ? kBarBlue : (v <= hi ? kBarGreen : kBarRed);
+  if (hi != null) return v <= hi ? kBarGreen : kBarRed;
+  return v < lo! ? kBarRed : kBarGreen;
+}
+
 /// Barra a tre zone (blu sotto, verde nella norma, rosso sopra) con un
 /// pallino sulla posizione del valore. Se la norma ha un solo limite
 /// la zona opposta non esiste: per "< x" sotto e' verde, per "> x" sopra e' verde.

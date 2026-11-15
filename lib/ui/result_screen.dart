@@ -275,7 +275,10 @@ class _ResultScreenState extends State<ResultScreen> {
           _under(r, a),
         ]),
         trailing: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.end, children: [
-          Text('${r.value} ${r.unit}', style: TextStyle(color: sevColor(r.severity), fontWeight: FontWeight.w600)),
+          Text('${r.value} ${r.unit}',
+              style: TextStyle(
+                  color: zoneColor(r.reference, a ?? double.tryParse(r.value)) ?? sevColor(r.severity),
+                  fontWeight: FontWeight.w600)),
           if (delta.isNotEmpty) Text(delta, style: const TextStyle(fontSize: 11)),
         ]),
       ));
@@ -302,7 +305,7 @@ class _ResultTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = sevColor(r.severity);
+    final c = zoneColor(r.reference, value ?? double.tryParse(r.value)) ?? sevColor(r.severity);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(12),

@@ -17,4 +17,12 @@ void main() {
     expect(RefRange.parse(''), isNull);
     expect(RefRange.parse('abc'), isNull);
   });
+  test('colore del valore = zona della barra', () {
+    expect(zoneColor('18.5 - 25', 17), kBarBlue);
+    expect(zoneColor('18.5 - 25', 25), kBarGreen);
+    expect(zoneColor('18.5 - 25', 26), kBarRed);
+    expect(zoneColor('< 0.5', 0.6), kBarRed);
+    expect(zoneColor('> 60', 70), kBarGreen);
+    expect(zoneColor('', 5), isNull);
+  });
 }
