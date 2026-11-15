@@ -798,7 +798,7 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
 /// nell'ordine di calcolo.
 const _order = <String>[
   // Antropometria
-  'BMI', 'BMI_CLASSIC', 'PI', 'W_RANGE', 'LORENZ', 'CREFF', 'GRANT', 'NECK', 'CALFCORR', 'BSA', 'BVOL',
+  'BMI', 'BMI_CLASSIC', 'PI', 'W_RANGE', 'GRANT', 'LORENZ', 'CREFF', 'NECK', 'CALFCORR', 'BSA', 'BVOL',
   // Distribuzione del grasso
   'WHTR', 'WHR', 'ABSI_Z', 'BRI', 'CI', 'AVI', 'BAI',
   // Composizione corporea
