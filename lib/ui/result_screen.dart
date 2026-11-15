@@ -325,9 +325,24 @@ class _ResultScreenState extends State<ResultScreen> {
   }
 }
 
+/// Colore di un rischio rispetto al profilo ottimale: verde, giallo, rosso.
+Color _riskColor(Severity sv) {
+  switch (sv) {
+    case Severity.ok:
+      return kBarGreen;
+    case Severity.watch:
+      return sevColor(Severity.watch);
+    case Severity.alert:
+      return kBarRed;
+    case Severity.info:
+      return kWireColor;
+  }
+}
+
 /// Colore del valore: la zona della barra; per la pressione la zona a tre stati.
 Color _valueColor(IndexResult r, double? value, Map<String, double> values) {
   if (r.key == 'BP') return zoneColorOf((values['BPZONE'] ?? 0).round());
+  if (r.key.startsWith('HT')) return _riskColor(r.severity);
   return zoneColor(r.reference, value ?? double.tryParse(r.value)) ?? sevColor(r.severity);
 }
 
@@ -340,6 +355,23 @@ Widget _under(IndexResult r, double? value, Map<String, double> values) {
       return Padding(
         padding: const EdgeInsets.only(top: 4),
         child: Text(r.comment, style: const TextStyle(fontSize: 13)),
+      );
+    case 'HT1':
+    case 'HT2':
+    case 'HT4':
+      final y = r.key.substring(2);
+      final ideal = values['HTREF$y'];
+      final mult = values['HTX$y'];
+      if (ideal == null || mult == null) return const SizedBox.shrink();
+      final c = _riskColor(r.severity);
+      return Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: Text.rich(TextSpan(style: const TextStyle(fontSize: 13), children: [
+          TextSpan(text: 'Profilo ottimale ${ideal.toStringAsFixed(2)} %  \u00b7  '),
+          TextSpan(
+              text: '${mult.toStringAsFixed(1)} volte',
+              style: TextStyle(color: c, fontWeight: FontWeight.w700)),
+        ])),
       );
     case 'BP':
     case 'HR':

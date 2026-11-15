@@ -50,6 +50,18 @@ void main() {
     final m = _male();
     final r = computeReport(m, const Anamnesis(answered: true, parentsHypertensive: 1), absi);
     test('eta', () => expect(m.age, 57));
+    test('rischio ipertensione: profilo ottimale e rapporto', () {
+      for (final y in ['1', '2', '4']) {
+        final risk = r.values['HT$y']!;
+        final ideal = r.values['HTREF$y']!;
+        expect(ideal, greaterThan(0));
+        expect(risk, greaterThan(ideal));
+        expect(r.values['HTX$y'], closeTo(risk / ideal, 1e-9));
+        final mult = risk / ideal;
+        final want = mult <= kHtOkMax ? Severity.ok : (mult <= kHtWatchMax ? Severity.watch : Severity.alert);
+        expect(r.byKey('HT$y')!.severity, want);
+      }
+    });
     final gold = <String, double>{
       'BMI': 28.7308,
       'BMI_CLASSIC': 29.0688,
