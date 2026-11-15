@@ -39,7 +39,7 @@ Color? zoneColor(String reference, double? v) {
   final lo = r.lo, hi = r.hi;
   if (lo != null && hi != null) return v < lo ? kBarBlue : (v <= hi ? kBarGreen : kBarRed);
   if (hi != null) return v <= hi ? kBarGreen : kBarRed;
-  return v < lo! ? kBarRed : kBarGreen;
+  return v < lo! ? kBarBlue : kBarGreen;
 }
 
 /// Colore di una zona numerica: -1 sotto la norma, 0 nella norma, 1 sopra.
@@ -47,7 +47,7 @@ Color zoneColorOf(int z) => z < 0 ? kBarBlue : (z > 0 ? kBarRed : kBarGreen);
 
 /// Barra a tre zone (blu sotto, verde nella norma, rosso sopra) con un
 /// pallino sulla posizione del valore. Se la norma ha un solo limite
-/// la zona opposta non esiste: per "< x" sotto e' verde, per "> x" sopra e' verde.
+/// la zona opposta non esiste: per "< x" sotto e' verde (sopra rosso), per "> x" sopra e' verde (sotto blu).
 class RangeBar extends StatelessWidget {
   final String reference;
   final double? value;
@@ -111,7 +111,7 @@ class _BarPainter extends CustomPainter {
         ..add((f(hi), 1, kBarRed));
     } else {
       zones
-        ..add((0, f(lo!), kBarRed))
+        ..add((0, f(lo!), kBarBlue))
         ..add((f(lo), 1, kBarGreen));
     }
 

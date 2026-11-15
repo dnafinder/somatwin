@@ -23,6 +23,7 @@ void main() {
     expect(zoneColor('18.5 - 25', 26), kBarRed);
     expect(zoneColor('< 0.5', 0.6), kBarRed);
     expect(zoneColor('> 60', 70), kBarGreen);
+    expect(zoneColor('> 33', 30), kBarBlue); // sotto la norma e' sempre azzurro
     expect(zoneColor('', 5), isNull);
   });
 }
