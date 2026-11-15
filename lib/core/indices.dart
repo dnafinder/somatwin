@@ -772,11 +772,10 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
       final r0v = _hypertensionRisk(y, ref) * 100;
       v['HT${y.toInt()}'] = r;
       v['HTREF${y.toInt()}'] = r0v;
-      // Colore dal rapporto con il profilo ottimale (stessa logica del referto:
-      // verde vicino all'ottimale, giallo moderatamente sopra, rosso molto sopra).
+      // Nessuna soglia sul rapporto: o si e' sopra il profilo ottimale o no.
       final mult = r / r0v;
       v['HTX${y.toInt()}'] = mult;
-      final sev = mult <= kHtOkMax ? _ok : (mult <= kHtWatchMax ? _w : _a);
+      final sev = r > r0v ? _a : _ok;
       add(gH, 'HT${y.toInt()}', 'Rischio a ${y.toInt()} ${y == 1.0 ? 'anno' : 'anni'}',
           _f(r, 2), unit: '%', sev: sev);
     }
@@ -800,13 +799,6 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
     notes: notes,
   );
 }
-
-/// Soglie provvisorie sul rapporto fra il rischio di ipertensione e quello del
-/// profilo ottimale: fino a 1,2 verde, fino a 2 giallo, oltre rosso. Coerenti
-/// con i punti noti del referto CARDIOMET (x1,3-1,6 giallo, x8,7-10,1 rosso);
-/// da sostituire con quelle del foglio di stile del referto.
-const double kHtOkMax = 1.2;
-const double kHtWatchMax = 2.0;
 
 /// Ordine di visualizzazione dentro ogni gruppo: prima gli indici di uso
 /// corrente, poi quelli derivati. Le chiavi non elencate restano in coda,

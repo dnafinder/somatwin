@@ -29,7 +29,7 @@ I dati restano sul dispositivo (archivio locale del browser o dell'app). Non c'�
 - Cuore: frequenza (bradicardico, eucardico, tachicardico), frequenza massima e riserva, gittata sistolica, gittata, indice cardiaco, lavoro cardiaco, RPP.
 - Pressione e arterie: stato pressorio (ipoteso, normoteso, iperteso), pressione di pulsazione e media, rigidità arteriosa, ePWV.
 - Periferia e perfusione: resistenza vascolare sistemica, shock index modificato.
-- Rischio di ipertensione a 1, 2 e 4 anni (Framingham, Parikh 2008). Accanto a ogni valore compaiono il rischio del profilo ottimale (BMI 22,5, 110/70, non fumatore, genitori non ipertesi) e il rapporto fra i due. Il colore dipende dal rapporto: verde fino a 1,2, giallo fino a 2, rosso oltre (soglie provvisorie).
+- Rischio di ipertensione a 1, 2 e 4 anni (Framingham, Parikh 2008). Accanto a ogni valore compaiono il rischio del profilo ottimale (BMI 22,5, 110/70, non fumatore, genitori non ipertesi) e il rapporto fra i due. Il valore è rosso se supera il profilo ottimale, verde altrimenti: nessuna soglia intermedia.
 
 Sotto ogni valore c'è una barra con la zona di riferimento e un pallino sulla posizione. Il colore del valore è quello della zona. Non hanno barra gli indici senza un intervallo di popolazione (per esempio metabolismo basale, pesi ideali, superficie corporea) e la pressione, che ha il suo stato in parole.
 

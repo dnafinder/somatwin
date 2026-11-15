@@ -57,9 +57,7 @@ void main() {
         expect(ideal, greaterThan(0));
         expect(risk, greaterThan(ideal));
         expect(r.values['HTX$y'], closeTo(risk / ideal, 1e-9));
-        final mult = risk / ideal;
-        final want = mult <= kHtOkMax ? Severity.ok : (mult <= kHtWatchMax ? Severity.watch : Severity.alert);
-        expect(r.byKey('HT$y')!.severity, want);
+        expect(r.byKey('HT$y')!.severity, risk > ideal ? Severity.alert : Severity.ok);
       }
     });
     final gold = <String, double>{
