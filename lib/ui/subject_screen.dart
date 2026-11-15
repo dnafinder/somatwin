@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../core/absi_table.dart';
 import '../core/models.dart';
+import '../data_io.dart';
+import '../share_file.dart';
 import '../storage.dart';
 import 'confirm.dart';
 import 'input_screen.dart';
@@ -76,12 +78,28 @@ class _SubjectScreenState extends State<SubjectScreen> {
     await _reload();
   }
 
+  Future<void> _exportCsv() async {
+    try {
+      await shareTextFile(csvFileName(_s), 'text/csv', subjectCsv(_records, widget.absi));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Esportazione non riuscita: $e')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: kToolbarHeight * kLabelScale,
         title: Text(_s.fullName),
+        actions: [
+          IconButton(
+            tooltip: 'Esporta le misure in CSV',
+            icon: const Icon(Icons.file_download_outlined),
+            onPressed: _records.isEmpty ? null : _exportCsv,
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _new,

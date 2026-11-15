@@ -39,6 +39,11 @@ Regole di classificazione:
 - Frequenza cardiaca: la zona dipende dall'età (fasce degli script originali); sotto la fascia bradicardico, sopra tachicardico.
 - FFMI: riferimento di Schutz 2002 (bioimpedenza) per gli uomini e per le donne fino a 34 anni. Per le donne oltre i 34 anni la barra non c'è, perché la tabella completa non era verificabile.
 
+## Dati: backup e CSV
+
+- **Backup (JSON).** Dal menu in alto nel registro: esporta tutti i soggetti e tutto lo storico in un solo file `somatwin_backup_AAAA-MM-GG.json` (foglio di condivisione su Android, download sul web). L'importazione unisce il file al registro: soggetti e misure si riconoscono dall'id, quelli già presenti non vengono toccati, una misura senza il suo soggetto viene saltata. Prima di scrivere compare l'anteprima dei conteggi. Lo stesso soggetto creato a mano su due dispositivi ha id diversi e risulta due volte.
+- **CSV per soggetto.** Dal pulsante in alto nella scheda del soggetto: una riga per misura, dalla più vecchia alla più recente. Prima i dati grezzi (data AAAA-MM-GG, età, sesso, misure, pressione, frequenza, anamnesi come 0/1), poi gli indici calcolati con le formule correnti dell'app. Separatore virgola, decimali con il punto, UTF-8. Gli indici non sono reimportabili: sono derivati, il backup JSON conserva solo i dati grezzi.
+
 ## Struttura del codice
 
 - `lib/core`: indici (`indices.dart`), tabelle ABSI, modelli. Dart puro.

@@ -65,6 +65,24 @@ class Record {
       );
 }
 
+/// Contenuto di un file di backup, gia' letto e controllato.
+class Backup {
+  final List<Subject> subjects;
+  final List<Record> records;
+  const Backup(this.subjects, this.records);
+}
+
+/// Esito (o anteprima) di un'importazione.
+class ImportSummary {
+  final int subjectsAdded;
+  final int subjectsSkipped;
+  final int recordsAdded;
+  final int recordsSkipped;
+  const ImportSummary(this.subjectsAdded, this.subjectsSkipped, this.recordsAdded, this.recordsSkipped);
+
+  bool get nothingToAdd => subjectsAdded == 0 && recordsAdded == 0;
+}
+
 /// Registro e storico locali (solo sul dispositivo).
 class Storage {
   static const _key = 'records_v1';
@@ -210,6 +228,46 @@ class Storage {
     final list = await _loadRaw();
     list.removeWhere((r) => r.id == id);
     await _save(list);
+  }
+
+  /// Tutto il registro, per il backup.
+  Future<Backup> loadAll() async {
+    await _migrate();
+    return Backup(await _loadSubjectsRaw(), await _loadRaw());
+  }
+
+  /// Unisce un backup al registro. Si riconosce tutto dall'id: un soggetto o
+  /// una misura gia' presenti non vengono toccati, una misura il cui soggetto
+  /// non e' ne' nel registro ne' nel file viene saltata. Con [dryRun] calcola
+  /// l'esito senza scrivere.
+  Future<ImportSummary> importBackup(Backup b, {bool dryRun = false}) async {
+    await _migrate();
+    final subjects = await _loadSubjectsRaw();
+    final records = await _loadRaw();
+    final subjectIds = {for (final s in subjects) s.id};
+    final recordIds = {for (final r in records) r.id};
+    var subjectsAdded = 0, subjectsSkipped = 0, recordsAdded = 0, recordsSkipped = 0;
+    for (final s in b.subjects) {
+      if (subjectIds.add(s.id)) {
+        subjects.add(s);
+        subjectsAdded++;
+      } else {
+        subjectsSkipped++;
+      }
+    }
+    for (final r in b.records) {
+      if (!subjectIds.contains(r.subjectId) || !recordIds.add(r.id)) {
+        recordsSkipped++;
+        continue;
+      }
+      records.add(r);
+      recordsAdded++;
+    }
+    if (!dryRun) {
+      await _saveSubjects(subjects);
+      await _save(records);
+    }
+    return ImportSummary(subjectsAdded, subjectsSkipped, recordsAdded, recordsSkipped);
   }
 }
 

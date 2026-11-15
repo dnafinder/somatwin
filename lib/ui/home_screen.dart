@@ -1,7 +1,12 @@
+import 'dart:convert';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../core/absi_table.dart';
 import '../core/models.dart';
+import '../data_io.dart';
+import '../share_file.dart';
 import '../storage.dart';
 import 'confirm.dart';
 import 'subject_form.dart';
@@ -77,12 +82,64 @@ class _HomeScreenState extends State<HomeScreen> {
     await _reload();
   }
 
+  void _say(String msg) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+  Future<void> _exportBackup() async {
+    final b = await _storage.loadAll();
+    if (b.subjects.isEmpty) {
+      _say('Il registro è vuoto: niente da esportare.');
+      return;
+    }
+    try {
+      await shareTextFile(backupFileName(DateTime.now()), 'application/json', encodeBackup(b.subjects, b.records));
+    } catch (e) {
+      if (mounted) _say('Esportazione non riuscita: $e');
+    }
+  }
+
+  Future<void> _importBackup() async {
+    final f = await FilePicker.pickFile();
+    if (f == null) return;
+    final Backup b;
+    try {
+      b = decodeBackup(utf8.decode(await f.readAsBytes()));
+    } on FormatException catch (e) {
+      if (mounted) _say(e.message);
+      return;
+    }
+    final plan = await _storage.importBackup(b, dryRun: true);
+    if (!mounted) return;
+    if (plan.nothingToAdd) {
+      _say('Niente da importare: tutto è già nel registro.');
+      return;
+    }
+    if (!await confirmImport(context, plan)) return;
+    final done = await _storage.importBackup(b);
+    await _reload();
+    if (!mounted) return;
+    _say('Importati ${done.subjectsAdded} soggetti e ${done.recordsAdded} misure.');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: kToolbarHeight * kLabelScale,
         title: const Text('Somatwin'),
+        actions: [
+          PopupMenuButton<String>(
+            tooltip: 'Backup',
+            onSelected: (v) => v == 'export' ? _exportBackup() : _importBackup(),
+            itemBuilder: (_) => const [
+              PopupMenuItem(value: 'export', child: Text('Esporta backup (JSON)')),
+              PopupMenuItem(value: 'import', child: Text('Importa backup')),
+            ],
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _new,
