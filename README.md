@@ -11,7 +11,7 @@ App Flutter (Android e web) che costruisce un gemello digitale da misure antropo
 
 1. **Registro.** Si aggiunge un soggetto con cognome, nome, sesso e data di nascita (solo adulti, almeno 18 anni). Questi dati non cambiano: valgono per tutte le misure del soggetto e si correggono dalla matita nell'elenco.
 2. **Misure.** Dentro un soggetto si inserisce una nuova misura: peso, altezza, circonferenze di vita, fianchi, polso, collo e polpaccio, pressione sistolica e diastolica, frequenza cardiaca. L'anamnesi (fumo, genitori ipertesi, terapia antipertensiva) è facoltativa e serve solo al rischio di ipertensione.
-3. **Risultati.** Tre schede: *Twin*, *Indici* e *Confronto* con la misura precedente dello stesso soggetto.
+3. **Risultati.** Quattro schede: *Twin*, *Circolo*, *Indici* e *Confronto* con la misura precedente dello stesso soggetto.
 4. **Eliminazione.** Si può cancellare una singola misura oppure un intero soggetto con tutte le sue misure, sempre con conferma.
 
 I dati restano sul dispositivo (archivio locale del browser o dell'app). Non c'è un server.
@@ -19,6 +19,8 @@ I dati restano sul dispositivo (archivio locale del browser o dell'app). Non c'�
 ## Cosa mostra
 
 **Twin.** Un corpo umano ricostruito sulla mesh base di MakeHuman e adattato a sesso, età, peso e altezza. Collo, vita, fianchi, polpaccio e polso sono risolti sulla mesh in modo che le circonferenze coincidano con quelle misurate. Ogni distretto prende il colore della zona della barra dei suoi indici: blu sotto la norma, verde nella norma, rosso sopra. Il cuore pulsa alla frequenza misurata. Se il volume non si accorda con il peso (soggetti pesanti rispetto alle misure), il volume resta sotto il peso rilevato e la scheda lo segnala. Se il caricamento del corpo fallisce, resta il vecchio modello a sezioni ellittiche.
+
+**Circolo.** Gli indici cardiovascolari nell'ordine in cui agiscono: cuore (frequenza, gittata sistolica, gittata, indice cardiaco, lavoro, RPP), arterie (pressione, pressione di pulsazione e media, rigidità, ePWV) e periferia (resistenza, shock index modificato). Gittata, gittata sistolica e resistenza sono stime da formule, non misure.
 
 **Indici.** Raggruppati per area:
 

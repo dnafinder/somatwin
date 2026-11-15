@@ -168,7 +168,7 @@ class _ResultScreenState extends State<ResultScreen> {
   Widget build(BuildContext context) {
     final hasPrev = _prevReport != null;
     return DefaultTabController(
-      length: hasPrev ? 3 : 2,
+      length: hasPrev ? 4 : 3,
       child: Scaffold(
         appBar: AppBar(
           toolbarHeight: kToolbarHeight * kLabelScale,
@@ -187,16 +187,83 @@ class _ResultScreenState extends State<ResultScreen> {
           ],
           bottom: TabBar(tabs: [
             Tab(height: 46 * kLabelScale, text: 'Twin'),
+            Tab(height: 46 * kLabelScale, text: 'Circolo'),
             Tab(height: 46 * kLabelScale, text: 'Indici'),
             if (hasPrev) Tab(height: 46 * kLabelScale, text: 'Confronto'),
           ]),
         ),
         body: TabBarView(children: [
           _twinTab(),
+          _circuitTab(),
           _indexTab(),
           if (hasPrev) _compareTab(),
         ]),
       ),
+    );
+  }
+
+  /// Il circolo come catena pompa, condotto, resistenza. Stesse barre della
+  /// scheda Indici, ma nell'ordine in cui agiscono: la pressione media nasce
+  /// da gittata e resistenza, e qui si vede quale delle due si discosta.
+  Widget _circuitTab() {
+    Widget stage(String title, String role, List<String> keys) {
+      final rows = <IndexResult>[
+        for (final k in keys)
+          if (_report.byKey(k) != null) _report.byKey(k)!,
+      ];
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(title, style: Theme.of(context).textTheme.titleMedium),
+            Text(role, style: const TextStyle(fontSize: 12)),
+            const SizedBox(height: 4),
+            for (final r in rows) ...[
+              const Divider(height: 16),
+              Row(children: [
+                Expanded(child: Text(r.label)),
+                Text('${r.value} ${r.unit}'.trim(),
+                    style: TextStyle(
+                        color: _valueColor(r, _report.values[r.key], _report.values),
+                        fontWeight: FontWeight.w700)),
+              ]),
+              _under(r, _report.values[r.key], _report.values),
+            ],
+          ]),
+        ),
+      );
+    }
+
+    Widget link(String text) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Column(children: [
+            const Icon(Icons.arrow_downward, size: 22),
+            Text(text, style: const TextStyle(fontSize: 12), textAlign: TextAlign.center),
+          ]),
+        );
+
+    final co = _report.byKey('CO');
+    return ListView(
+      padding: const EdgeInsets.all(12),
+      children: [
+        stage('Cuore', 'Pompa: quanto sangue muove e con quale lavoro',
+            ['HR', 'SV', 'CO', 'CIDX', 'LCWI', 'RPP']),
+        link(co == null ? 'Flusso' : 'Flusso: gittata ${co.value} ${co.unit}'),
+        stage('Arterie', 'Condotto: pressione e rigidità della parete',
+            ['BP', 'PP', 'MAP', 'AI', 'EPWV']),
+        link('Resistenza al passaggio del sangue'),
+        stage('Periferia', 'Resistenza: quanto si oppone il letto vascolare, e perfusione',
+            ['SVRI', 'MSI']),
+        const Padding(
+          padding: EdgeInsets.fromLTRB(4, 12, 4, 24),
+          child: Text(
+            'Gittata, gittata sistolica e resistenza sono stime da formule su pressione, età e '
+            'superficie corporea: non sono misure dirette. La pressione media cresce se aumenta '
+            'la gittata o se aumenta la resistenza, e le due stime derivano dagli stessi dati.',
+            style: TextStyle(fontSize: 12),
+          ),
+        ),
+      ],
     );
   }
 
