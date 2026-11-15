@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../core/models.dart';
 import '../storage.dart';
+import 'confirm.dart' show fmtDate;
 
 class _Field {
   final String key;
@@ -27,12 +28,15 @@ const _fields = [
 ];
 
 class InputScreen extends StatefulWidget {
-  /// Ultima misura: precompila sesso, data di nascita e anamnesi.
+  /// Soggetto del registro: sesso e data di nascita vengono da qui.
+  final Subject subject;
+
+  /// Ultima misura del soggetto: precompila l'anamnesi.
   final Record? template;
 
   /// Misura da correggere: precompila tutti i campi e ne mantiene id e data.
   final Record? edit;
-  const InputScreen({super.key, this.template, this.edit});
+  const InputScreen({super.key, required this.subject, this.template, this.edit});
 
   @override
   State<InputScreen> createState() => _InputScreenState();
@@ -41,21 +45,16 @@ class InputScreen extends StatefulWidget {
 class _InputScreenState extends State<InputScreen> {
   final _form = GlobalKey<FormState>();
   final _ctrl = {for (final f in _fields) f.key: TextEditingController()};
-  Sex _sex = Sex.male;
-  DateTime? _birth;
   bool _anamnesis = false;
   bool _smoker = false;
   int _parents = 0;
   bool _drugs = false;
-  String? _birthError;
 
   @override
   void initState() {
     super.initState();
     final t = widget.edit ?? widget.template;
     if (t != null) {
-      _sex = t.m.sex;
-      _birth = t.m.birthDate;
       _anamnesis = t.an.answered;
       _smoker = t.an.smoker;
       _parents = t.an.parentsHypertensive;
@@ -90,7 +89,7 @@ class _InputScreenState extends State<InputScreen> {
     super.dispose();
   }
 
-  /// Dati grezzi del soggetto del referto CARDIOMET (maschio, 57 anni).
+  /// Misure del soggetto del referto CARDIOMET (maschio, 57 anni).
   void _fillDemo() {
     const v = {
       'weight': '87',
@@ -104,12 +103,8 @@ class _InputScreenState extends State<InputScreen> {
       'dbp': '87',
       'hr': '61',
     };
-    final now = DateTime.now();
     setState(() {
       v.forEach((k, t) => _ctrl[k]!.text = t);
-      _sex = Sex.male;
-      _birth = DateTime(now.year - 57, 1, 1);
-      _birthError = null;
       _anamnesis = true;
       _smoker = false;
       _parents = 1;
@@ -118,36 +113,11 @@ class _InputScreenState extends State<InputScreen> {
     _form.currentState?.validate();
   }
 
-  Future<void> _pickBirth() async {
-    final now = DateTime.now();
-    final d = await showDatePicker(
-      context: context,
-      initialDate: _birth ?? DateTime(now.year - 40, 1, 1),
-      firstDate: DateTime(1900),
-      lastDate: now,
-      helpText: 'Data di nascita',
-    );
-    if (d != null) setState(() {
-      _birth = d;
-      _birthError = null;
-    });
-  }
-
   double _v(String k) => double.parse(_ctrl[k]!.text.replaceAll(',', '.'));
 
   void _submit() {
     final okForm = _form.currentState!.validate();
-    String? be;
-    if (_birth == null) {
-      be = 'Obbligatoria';
-    } else {
-      final now = DateTime.now();
-      var age = now.year - _birth!.year;
-      if (now.month < _birth!.month || (now.month == _birth!.month && now.day < _birth!.day)) age--;
-      if (age < 18) be = 'Solo per adulti (almeno 18 anni)';
-    }
-    setState(() => _birthError = be);
-    if (!okForm || be != null) return;
+    if (!okForm) return;
     if (_v('sbp') <= _v('dbp')) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('La sistolica deve superare la diastolica.')),
@@ -156,8 +126,8 @@ class _InputScreenState extends State<InputScreen> {
     }
     final now = DateTime.now();
     final m = Measurements(
-      sex: _sex,
-      birthDate: _birth!,
+      sex: widget.subject.sex,
+      birthDate: widget.subject.birth,
       takenOn: widget.edit?.m.takenOn ?? now,
       weight: _v('weight'),
       height: _v('height'),
@@ -176,11 +146,9 @@ class _InputScreenState extends State<InputScreen> {
       parentsHypertensive: _anamnesis ? _parents : 0,
       onAntihypertensives: _anamnesis && _drugs,
     );
-    Navigator.of(context).pop(Record(widget.edit?.id ?? now.microsecondsSinceEpoch.toString(), m, an));
+    Navigator.of(context).pop(Record(widget.edit?.id ?? now.microsecondsSinceEpoch.toString(), m, an,
+        subjectId: widget.subject.id));
   }
-
-  String _fmtDate(DateTime d) =>
-      '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
 
   @override
   Widget build(BuildContext context) {
@@ -199,26 +167,13 @@ class _InputScreenState extends State<InputScreen> {
               ),
               const SizedBox(height: 12),
             ],
-            SegmentedButton<Sex>(
-              segments: const [
-                ButtonSegment(value: Sex.male, label: Text('Maschio')),
-                ButtonSegment(value: Sex.female, label: Text('Femmina')),
-              ],
-              selected: {_sex},
-              onSelectionChanged: (s) => setState(() => _sex = s.first),
-            ),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              onPressed: _pickBirth,
-              icon: const Icon(Icons.cake_outlined),
-              label: Text(_birth == null ? 'Data di nascita' : 'Nato il ${_fmtDate(_birth!)}'),
-            ),
-            if (_birthError != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 4, left: 12),
-                child: Text(_birthError!, style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 12)),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                '${widget.subject.fullName}, ${widget.subject.sex.label.toLowerCase()}, nato il ${fmtDate(widget.subject.birth)}',
+                style: Theme.of(context).textTheme.titleSmall,
               ),
-            const SizedBox(height: 12),
+            ),
             for (final f in _fields)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6),

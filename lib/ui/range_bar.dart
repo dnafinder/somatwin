@@ -42,6 +42,9 @@ Color? zoneColor(String reference, double? v) {
   return v < lo! ? kBarRed : kBarGreen;
 }
 
+/// Colore di una zona numerica: -1 sotto la norma, 0 nella norma, 1 sopra.
+Color zoneColorOf(int z) => z < 0 ? kBarBlue : (z > 0 ? kBarRed : kBarGreen);
+
 /// Barra a tre zone (blu sotto, verde nella norma, rosso sopra) con un
 /// pallino sulla posizione del valore. Se la norma ha un solo limite
 /// la zona opposta non esiste: per "< x" sotto e' verde, per "> x" sopra e' verde.

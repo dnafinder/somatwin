@@ -15,10 +15,11 @@ import 'range_bar.dart';
 import 'theme.dart';
 
 class ResultScreen extends StatefulWidget {
+  final Subject subject;
   final Record record;
   final Record? previous;
   final AbsiTable absi;
-  const ResultScreen({super.key, required this.record, required this.absi, this.previous});
+  const ResultScreen({super.key, required this.subject, required this.record, required this.absi, this.previous});
 
   @override
   State<ResultScreen> createState() => _ResultScreenState();
@@ -29,6 +30,7 @@ class _ResultScreenState extends State<ResultScreen> {
   late final Report? _prevReport;
   late final BodyModel _body;
   late final BodyModel? _prevBody;
+  late final Map<String, Color> _bodyColors;
   MhBody? _mhBody;
   MhBody? _mhPrev;
   bool _mhFailed = false;
@@ -43,6 +45,7 @@ class _ResultScreenState extends State<ResultScreen> {
     final p = widget.previous;
     _prevReport = p == null ? null : computeReport(p.m, p.an, widget.absi);
     _prevBody = p == null ? null : buildBody(p.m);
+    _bodyColors = _zoneColors();
     _loadMh();
   }
 
@@ -65,6 +68,36 @@ class _ResultScreenState extends State<ResultScreen> {
     } catch (e) {
       if (mounted) setState(() => _mhFailed = true);
     }
+  }
+
+  /// Colore di ogni distretto = zona della barra dei suoi indici. Con piu'
+  /// indici vince la zona peggiore: sopra la norma, poi sotto, poi nella norma.
+  /// Il polso non ha una barra e resta neutro.
+  Map<String, Color> _zoneColors() {
+    final out = <String, Color>{};
+    int rank(int z) => z > 0 ? 2 : (z < 0 ? 1 : 0);
+    int? zoneOf(String key) {
+      final r = _report.byKey(key);
+      if (r == null) return null;
+      final v = _report.values[key] ?? double.tryParse(r.value);
+      final c = zoneColor(r.reference, v);
+      if (c == null) return null;
+      return c == kBarBlue ? -1 : (c == kBarRed ? 1 : 0);
+    }
+
+    _partKeys.forEach((tag, keys) {
+      int? worst;
+      void take(int? z) {
+        if (z == null) return;
+        if (worst == null || rank(z) > rank(worst!)) worst = z;
+      }
+
+      for (final k in keys) {
+        take(k == 'BP' ? (_report.values['BPZONE'] ?? 0).round() : zoneOf(k));
+      }
+      if (worst != null) out[tag] = zoneColorOf(worst!);
+    });
+    return out;
   }
 
   Map<String, String> _labels() {
@@ -106,7 +139,7 @@ class _ResultScreenState extends State<ResultScreen> {
           Text(_labels()[tag] ?? tag, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           if (rows.isEmpty) const Text('Nessun indice collegato.'),
-          for (final r in rows) _ResultTile(r, _report.values[r.key]),
+          for (final r in rows) _ResultTile(r, _report.values[r.key], _report.values),
         ],
       ),
     );
@@ -114,13 +147,13 @@ class _ResultScreenState extends State<ResultScreen> {
 
   Future<void> _edit() async {
     final fixed = await Navigator.of(context).push<Record>(
-      MaterialPageRoute(builder: (_) => InputScreen(edit: widget.record)),
+      MaterialPageRoute(builder: (_) => InputScreen(subject: widget.subject, edit: widget.record)),
     );
     if (fixed == null || !mounted) return;
     await Storage().update(fixed);
     if (!mounted) return;
     Navigator.of(context).pushReplacement(MaterialPageRoute(
-      builder: (_) => ResultScreen(record: fixed, previous: widget.previous, absi: widget.absi),
+      builder: (_) => ResultScreen(subject: widget.subject, record: fixed, previous: widget.previous, absi: widget.absi),
     ));
   }
 
@@ -138,7 +171,8 @@ class _ResultScreenState extends State<ResultScreen> {
       length: hasPrev ? 3 : 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Il tuo Somatwin'),
+          toolbarHeight: kToolbarHeight * kLabelScale,
+          title: Text(widget.subject.fullName),
           actions: [
             IconButton(
               tooltip: 'Correggi i dati',
@@ -152,9 +186,9 @@ class _ResultScreenState extends State<ResultScreen> {
             ),
           ],
           bottom: TabBar(tabs: [
-            const Tab(text: 'Twin'),
-            const Tab(text: 'Indici'),
-            if (hasPrev) const Tab(text: 'Confronto'),
+            Tab(height: 46 * kLabelScale, text: 'Twin'),
+            Tab(height: 46 * kLabelScale, text: 'Indici'),
+            if (hasPrev) Tab(height: 46 * kLabelScale, text: 'Confronto'),
           ]),
         ),
         body: TabBarView(children: [
@@ -168,11 +202,15 @@ class _ResultScreenState extends State<ResultScreen> {
 
   Widget _twinTab() {
     final legend = Wrap(spacing: 12, runSpacing: 4, children: [
-      for (final s in [Severity.ok, Severity.watch, Severity.alert])
+      for (final e in const [
+        (kBarBlue, 'Sotto la norma'),
+        (kBarGreen, 'Nella norma'),
+        (kBarRed, 'Sopra la norma'),
+      ])
         Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(Icons.circle, size: 10, color: sevColor(s)),
+          Icon(Icons.circle, size: 10, color: e.$1),
           const SizedBox(width: 4),
-          Text(sevText(s), style: const TextStyle(fontSize: 11)),
+          Text(e.$2, style: const TextStyle(fontSize: 11)),
         ]),
     ]);
     return Column(children: [
@@ -181,7 +219,7 @@ class _ResultScreenState extends State<ResultScreen> {
             ? MhTwinView(
                 body: _mhBody!,
                 previous: widget.previous == null ? null : _mhPrev,
-                severity: _report.body,
+                colors: _bodyColors,
                 labels: _labels(),
                 heartRate: widget.record.m.hr,
                 onTapPart: _tap,
@@ -236,7 +274,7 @@ class _ResultScreenState extends State<ResultScreen> {
             padding: const EdgeInsets.only(top: 12, bottom: 4),
             child: Text(e.key, style: Theme.of(context).textTheme.titleMedium),
           ),
-          for (final r in e.value) _ResultTile(r, _report.values[r.key]),
+          for (final r in e.value) _ResultTile(r, _report.values[r.key], _report.values),
         ],
         if (_report.zonesFcmax.isNotEmpty) ...[
           Padding(
@@ -272,12 +310,12 @@ class _ResultScreenState extends State<ResultScreen> {
         title: Text(r.label),
         subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text('prima: ${p.value} ${p.unit}'),
-          _under(r, a),
+          _under(r, a, _report.values),
         ]),
         trailing: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.end, children: [
           Text('${r.value} ${r.unit}',
               style: TextStyle(
-                  color: zoneColor(r.reference, a ?? double.tryParse(r.value)) ?? sevColor(r.severity),
+                  color: _valueColor(r, a, _report.values),
                   fontWeight: FontWeight.w600)),
           if (delta.isNotEmpty) Text(delta, style: const TextStyle(fontSize: 11)),
         ]),
@@ -287,25 +325,46 @@ class _ResultScreenState extends State<ResultScreen> {
   }
 }
 
-/// Sotto il valore: barra di riferimento; per l'indice di Grant il morfotipo.
-Widget _under(IndexResult r, double? value) {
-  if (r.key == 'GRANT') {
-    return Padding(
-      padding: const EdgeInsets.only(top: 4),
-      child: Text(r.comment, style: const TextStyle(fontSize: 13)),
-    );
+/// Colore del valore: la zona della barra; per la pressione la zona a tre stati.
+Color _valueColor(IndexResult r, double? value, Map<String, double> values) {
+  if (r.key == 'BP') return zoneColorOf((values['BPZONE'] ?? 0).round());
+  return zoneColor(r.reference, value ?? double.tryParse(r.value)) ?? sevColor(r.severity);
+}
+
+/// Sotto il valore: barra di riferimento. Pressione, frequenza e Grant
+/// aggiungono lo stato in parole (la pressione non ha una barra).
+Widget _under(IndexResult r, double? value, Map<String, double> values) {
+  final bar = RangeBar(reference: r.reference, value: value ?? double.tryParse(r.value));
+  switch (r.key) {
+    case 'GRANT':
+      return Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: Text(r.comment, style: const TextStyle(fontSize: 13)),
+      );
+    case 'BP':
+    case 'HR':
+      final z = (values[r.key == 'BP' ? 'BPZONE' : 'HRZONE'] ?? 0).round();
+      return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(r.comment,
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: zoneColorOf(z))),
+        ),
+        bar,
+      ]);
   }
-  return RangeBar(reference: r.reference, value: value ?? double.tryParse(r.value));
+  return bar;
 }
 
 class _ResultTile extends StatelessWidget {
   final IndexResult r;
   final double? value;
-  const _ResultTile(this.r, this.value);
+  final Map<String, double> values;
+  const _ResultTile(this.r, this.value, this.values);
 
   @override
   Widget build(BuildContext context) {
-    final c = zoneColor(r.reference, value ?? double.tryParse(r.value)) ?? sevColor(r.severity);
+    final c = _valueColor(r, value, values);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -314,7 +373,7 @@ class _ResultTile extends StatelessWidget {
             Expanded(child: Text(r.label)),
             Text('${r.value} ${r.unit}'.trim(), style: TextStyle(color: c, fontWeight: FontWeight.w700)),
           ]),
-          _under(r, value),
+          _under(r, value, values),
         ]),
       ),
     );

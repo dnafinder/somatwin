@@ -3,6 +3,7 @@ library;
 
 import 'dart:math' as math;
 import 'dart:typed_data';
+import 'package:flutter/painting.dart' show Color;
 
 import '../core/models.dart';
 import 'mh_data.dart';
@@ -118,20 +119,14 @@ class MhBody {
   }
 
   /// Colore base e miscela per distretto (0-255 per canale, rgb consecutivi).
-  Float32List regionRgb(Map<String, Severity> sev) {
+  /// Il colore di ogni distretto e' quello della zona nella barra dell'indice.
+  Float32List regionRgb(Map<String, Color> colors) {
     const base = [78.0, 106.0, 128.0];
-    List<double> sevRgb(Severity s) {
-      switch (s) {
-        case Severity.ok:
-          return const [43.0, 191.0, 146.0];
-        case Severity.watch:
-          return const [242.0, 201.0, 76.0];
-        case Severity.alert:
-          return const [242.0, 118.0, 46.0];
-        case Severity.info:
-          return const [127.0, 183.0, 214.0];
-      }
-    }
+    List<double> rgbOf(Color c) => [
+          ((c.value >> 16) & 0xFF).toDouble(),
+          ((c.value >> 8) & 0xFF).toDouble(),
+          (c.value & 0xFF).toDouble(),
+        ];
 
     final nv = data.nv;
     final out = Float32List(nv * 3);
@@ -163,9 +158,9 @@ class MhBody {
         cand('wrist', g(math.sqrt(dx * dx + dy * dy + dz * dz), 6.0));
       }
       var r = base[0], gr = base[1], b = base[2];
-      if (best != null && sev[best] != null) {
+      if (best != null && colors[best] != null) {
         final w = math.min(1.0, bw * 1.15);
-        final s = sevRgb(sev[best]!);
+        final s = rgbOf(colors[best]!);
         r += (s[0] - r) * w;
         gr += (s[1] - gr) * w;
         b += (s[2] - b) * w;

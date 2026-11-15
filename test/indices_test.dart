@@ -44,6 +44,7 @@ Measurements _female() => Measurements(
 
 void main() {
   final absi = _table();
+  statiTests();
 
   group('maschio 57 anni (referto CARDIOMET)', () {
     final m = _male();
@@ -101,6 +102,12 @@ void main() {
         expect(x, isNotNull, reason: 'manca $k');
         expect(x!, closeTo(g, g.abs() * 0.002 + 0.0006), reason: k);
       });
+    });
+    test('pressione e frequenza in parole', () {
+      expect(r.byKey('BP')!.comment, 'Normoteso');
+      expect(r.byKey('HR')!.comment, 'Bradicardico');
+      expect(r.values['BPZONE'], 0);
+      expect(r.values['HRZONE'], -1);
     });
     test('AVI corretto, non il valore del referto (15.55)', () {
       expect(r.values['AVI']!, isNot(closeTo(15.5466, 0.5)));
@@ -171,3 +178,40 @@ void main() {
     expect(absi.lookup(99, Sex.female).mean, absi.lookup(85, Sex.female).mean);
   });
 }
+
+void statiTests() {
+  group('stati pressione e frequenza', () {
+    Report rep(double sbp, double dbp, double hr) {
+      final m = Measurements(
+        sex: Sex.male,
+        birthDate: DateTime(1968, 1, 1),
+        takenOn: DateTime(2025, 6, 1),
+        weight: 87,
+        height: 173,
+        waist: 107,
+        hip: 103,
+        wrist: 18,
+        neck: 40,
+        calf: 38,
+        sbp: sbp,
+        dbp: dbp,
+        hr: hr,
+      );
+      return computeReport(m, const Anamnesis(), _table());
+    }
+  
+    test('ipoteso, normoteso, iperteso', () {
+      expect(rep(85, 55, 72).byKey('BP')!.comment, 'Ipoteso');
+      expect(rep(89, 70, 72).byKey('BP')!.comment, 'Ipoteso');
+      expect(rep(139, 89, 72).byKey('BP')!.comment, 'Normoteso');
+      expect(rep(140, 85, 72).byKey('BP')!.comment, 'Iperteso');
+      expect(rep(125, 90, 72).byKey('BP')!.comment, 'Iperteso');
+    });
+  
+    test('bradicardico, eucardico, tachicardico (57 anni: 72 - 75 bpm)', () {
+      expect(rep(120, 80, 60).byKey('HR')!.comment, 'Bradicardico');
+      expect(rep(120, 80, 73).byKey('HR')!.comment, 'Eucardico');
+      expect(rep(120, 80, 90).byKey('HR')!.comment, 'Tachicardico');
+    });
+  });
+  }

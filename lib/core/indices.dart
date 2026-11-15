@@ -501,8 +501,11 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
   ];
   final bpCl = bpLabels[bpc - 1];
   v['BPC'] = bpc.toDouble();
+  // Tre stati: ipoteso sotto 90/60, iperteso da 140/90 (come la classe "Ipertensione lieve").
+  final bpZone = (sbp < 90 || dbp < 60) ? -1 : ((sbp >= 140 || dbp >= 90) ? 1 : 0);
+  v['BPZONE'] = bpZone.toDouble();
   add(gC, 'BP', 'Pressione arteriosa', '${_f(sbp, 0)}/${_f(dbp, 0)}', unit: 'mmHg',
-      comment: bpCl.label, sev: bpCl.sev);
+      comment: bpZone < 0 ? 'Ipoteso' : (bpZone > 0 ? 'Iperteso' : 'Normoteso'), sev: bpCl.sev);
 
   // Frequenza cardiaca per fascia d'eta'
   final ag = cls(age.toDouble(), [26, 36, 46, 56, 66]); // 0..5
@@ -529,8 +532,11 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
   } else {
     hrC = const _C('Bradicardia eccessiva', _a);
   }
+  final hrZone = hr < euLo[ag] ? -1 : (hr > euHi[ag] ? 1 : 0);
+  v['HRZONE'] = hrZone.toDouble();
   add(gC, 'HR', 'Frequenza cardiaca a riposo', _f(hr, 0), unit: 'bpm',
-      reference: '${euLo[ag]} - ${euHi[ag]}', comment: hrC.label, sev: hrC.sev);
+      reference: '${euLo[ag]} - ${euHi[ag]}',
+      comment: hrZone < 0 ? 'Bradicardico' : (hrZone > 0 ? 'Tachicardico' : 'Eucardico'), sev: hrC.sev);
 
   // Frequenza massima
   final fcm = sex == 0

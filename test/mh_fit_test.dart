@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:digital_twin/core/models.dart';
 import 'package:digital_twin/twin/mh_body.dart';
+import 'package:digital_twin/ui/range_bar.dart';
 import 'package:digital_twin/twin/mh_data.dart';
 import 'package:digital_twin/twin/mh_fit.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -88,7 +89,7 @@ void main() {
     expect(b.rings['calf']!.length, 2);
     expect(b.rings['wrist']!.length, 2);
     expect(b.heart[1], closeTo(0.725 * 173, 1e-6));
-    final rgb = b.regionRgb({'waist': Severity.alert, 'hip': Severity.ok});
+    final rgb = b.regionRgb({'waist': kBarRed, 'hip': kBarGreen});
     expect(rgb.length, data.nv * 3);
     // la vita e' arancione (alert), la testa resta di colore base
     var maxR = 0.0;

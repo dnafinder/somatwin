@@ -51,6 +51,23 @@ class Measurements {
     required this.hr,
   });
 
+  /// Stessa misura con sesso e data di nascita del registro.
+  Measurements withIdentity(Sex s, DateTime birth) => Measurements(
+        sex: s,
+        birthDate: birth,
+        takenOn: takenOn,
+        weight: weight,
+        height: height,
+        waist: waist,
+        hip: hip,
+        wrist: wrist,
+        neck: neck,
+        calf: calf,
+        sbp: sbp,
+        dbp: dbp,
+        hr: hr,
+      );
+
   /// Eta' in anni compiuti alla data della misurazione.
   int get age {
     var a = takenOn.year - birthDate.year;

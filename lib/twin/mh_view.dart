@@ -50,7 +50,7 @@ class MhPainter extends CustomPainter {
   final MhBody? previous;
   final Float32List rgb;
   final _Buf buf;
-  final Map<String, Severity> severity;
+  final Map<String, Color> colors;
   final Map<String, String> labels;
   final double yaw;
   final double zoom;
@@ -62,7 +62,7 @@ class MhPainter extends CustomPainter {
     required this.previous,
     required this.rgb,
     required this.buf,
-    required this.severity,
+    required this.colors,
     required this.labels,
     required this.yaw,
     required this.zoom,
@@ -70,7 +70,7 @@ class MhPainter extends CustomPainter {
     required this.heartRate,
   });
 
-  Color _sevColor(String key) => sevColor(severity[key] ?? Severity.info);
+  Color _sevColor(String key) => colors[key] ?? kWireColor;
 
   double _pulse() {
     var period = 60.0 / math.max(30.0, heartRate);
@@ -289,7 +289,7 @@ class MhPainter extends CustomPainter {
 class MhTwinView extends StatefulWidget {
   final MhBody body;
   final MhBody? previous;
-  final Map<String, Severity> severity;
+  final Map<String, Color> colors;
   final Map<String, String> labels;
   final double heartRate;
   final void Function(String tag)? onTapPart;
@@ -297,7 +297,7 @@ class MhTwinView extends StatefulWidget {
   const MhTwinView({
     super.key,
     required this.body,
-    required this.severity,
+    required this.colors,
     required this.labels,
     required this.heartRate,
     this.previous,
@@ -334,14 +334,14 @@ class _MhTwinViewState extends State<MhTwinView> with SingleTickerProviderStateM
   }
 
   void _prepare() {
-    _rgb = widget.body.regionRgb(widget.severity);
+    _rgb = widget.body.regionRgb(widget.colors);
     _buf = _Buf(widget.body.data.nv, widget.body.data.tris.length ~/ 3);
   }
 
   @override
   void didUpdateWidget(covariant MhTwinView old) {
     super.didUpdateWidget(old);
-    if (old.body != widget.body || old.severity != widget.severity) _prepare();
+    if (old.body != widget.body || old.colors != widget.colors) _prepare();
   }
 
   @override
@@ -355,7 +355,7 @@ class _MhTwinViewState extends State<MhTwinView> with SingleTickerProviderStateM
         previous: widget.previous,
         rgb: _rgb,
         buf: _buf,
-        severity: widget.severity,
+        colors: widget.colors,
         labels: widget.labels,
         yaw: _yaw,
         zoom: _zoom,

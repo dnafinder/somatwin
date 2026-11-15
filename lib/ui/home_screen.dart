@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../core/absi_table.dart';
-import '../core/models.dart';
 import '../storage.dart';
 import 'confirm.dart';
-import 'input_screen.dart';
-import 'result_screen.dart';
+import 'subject_form.dart';
+import 'subject_screen.dart';
 import 'theme.dart';
 
+/// Registro dei soggetti. Ogni soggetto ha le sue misure.
 class HomeScreen extends StatefulWidget {
   final AbsiTable absi;
   const HomeScreen({super.key, required this.absi});
@@ -18,7 +18,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final _storage = Storage();
-  List<Record> _records = [];
+  List<Subject> _subjects = [];
+  Map<String, int> _counts = {};
   bool _loading = true;
 
   @override
@@ -28,78 +29,85 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _reload() async {
-    final r = await _storage.load();
+    final s = await _storage.loadSubjects();
+    final c = await _storage.counts();
     if (!mounted) return;
     setState(() {
-      _records = r;
+      _subjects = s;
+      _counts = c;
       _loading = false;
     });
   }
 
   Future<void> _new() async {
-    final last = _records.isEmpty ? null : _records.first;
-    final rec = await Navigator.of(context).push<Record>(
-      MaterialPageRoute(builder: (_) => InputScreen(template: last)),
+    final s = await Navigator.of(context).push<Subject>(
+      MaterialPageRoute(builder: (_) => const SubjectFormScreen()),
     );
-    if (rec == null) return;
-    await _storage.add(rec);
+    if (s == null) return;
+    await _storage.addSubject(s);
     await _reload();
     if (!mounted) return;
-    _open(rec);
+    _open(s);
   }
 
-  Future<void> _open(Record rec) async {
-    final idx = _records.indexWhere((r) => r.id == rec.id);
-    final prev = (idx >= 0 && idx + 1 < _records.length) ? _records[idx + 1] : null;
-    await Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => ResultScreen(record: rec, previous: prev, absi: widget.absi),
-    ));
+  Future<void> _open(Subject s) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => SubjectScreen(subject: s, absi: widget.absi)),
+    );
     await _reload();
   }
 
-  Future<void> _delete(Record rec) async {
-    if (!await confirmDelete(context, fmtDate(rec.m.takenOn))) return;
-    await _storage.delete(rec.id);
-    await _reload();
-  }
-
-  Future<void> _edit(Record rec) async {
-    final fixed = await Navigator.of(context).push<Record>(
-      MaterialPageRoute(builder: (_) => InputScreen(edit: rec)),
+  Future<void> _edit(Subject s) async {
+    final fixed = await Navigator.of(context).push<Subject>(
+      MaterialPageRoute(builder: (_) => SubjectFormScreen(edit: s)),
     );
     if (fixed == null) return;
-    await _storage.update(fixed);
+    await _storage.updateSubject(fixed);
+    await _reload();
+  }
+
+  Future<bool> _confirm(Subject s) {
+    return confirmDeleteSubject(context, s.fullName, _counts[s.id] ?? 0);
+  }
+
+  Future<void> _delete(Subject s) async {
+    if (!await _confirm(s)) return;
+    await _storage.deleteSubject(s.id);
     await _reload();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Somatwin')),
+      appBar: AppBar(
+        toolbarHeight: kToolbarHeight * kLabelScale,
+        title: const Text('Somatwin'),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _new,
-        icon: const Icon(Icons.add),
-        label: const Text('Nuova misura'),
+        icon: const Icon(Icons.person_add_alt_1),
+        label: const Text('Nuovo soggetto'),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : _records.isEmpty
+          : _subjects.isEmpty
               ? Center(
                   child: Padding(
                     padding: const EdgeInsets.all(32),
                     child: Text(
-                      'Nessuna misura salvata.\nInserisci peso, altezza, circonferenze e pressione per generare il tuo gemello digitale.\n\n$kDisclaimer',
+                      'Il registro è vuoto.\nAggiungi un soggetto con nome, cognome, sesso e data di nascita, poi associa le sue misure.\n\n$kDisclaimer',
                       textAlign: TextAlign.center,
                     ),
                   ),
                 )
               : ListView.builder(
                   padding: const EdgeInsets.fromLTRB(12, 8, 12, 96),
-                  itemCount: _records.length,
+                  itemCount: _subjects.length,
                   itemBuilder: (context, i) {
-                    final r = _records[i];
+                    final s = _subjects[i];
+                    final n = _counts[s.id] ?? 0;
                     return Dismissible(
-                      key: ValueKey(r.id),
+                      key: ValueKey(s.id),
                       direction: DismissDirection.endToStart,
                       background: Container(
                         color: Colors.red.shade900,
@@ -107,32 +115,32 @@ class _HomeScreenState extends State<HomeScreen> {
                         padding: const EdgeInsets.only(right: 20),
                         child: const Icon(Icons.delete),
                       ),
-                      confirmDismiss: (_) => confirmDelete(context, fmtDate(r.m.takenOn)),
+                      confirmDismiss: (_) => _confirm(s),
                       onDismissed: (_) async {
-                        await _storage.delete(r.id);
+                        await _storage.deleteSubject(s.id);
                         await _reload();
                       },
                       child: Card(
                         child: ListTile(
-                          title: Text(fmtDate(r.m.takenOn)),
+                          title: Text(s.fullName),
                           subtitle: Text(
-                              '${r.m.sex.label}, ${r.m.age} anni, ${r.m.weight.toStringAsFixed(1)} kg, ${r.m.height.toStringAsFixed(0)} cm'),
+                              '${s.sex.label}, nato il ${fmtDate(s.birth)}, ${n == 1 ? '1 misura' : '$n misure'}'),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               IconButton(
-                                tooltip: 'Correggi i dati',
+                                tooltip: 'Modifica i dati del soggetto',
                                 icon: const Icon(Icons.edit_outlined),
-                                onPressed: () => _edit(r),
+                                onPressed: () => _edit(s),
                               ),
                               IconButton(
-                                tooltip: 'Elimina la misura',
+                                tooltip: 'Elimina il soggetto',
                                 icon: const Icon(Icons.delete_outline),
-                                onPressed: () => _delete(r),
+                                onPressed: () => _delete(s),
                               ),
                             ],
                           ),
-                          onTap: () => _open(r),
+                          onTap: () => _open(s),
                         ),
                       ),
                     );
