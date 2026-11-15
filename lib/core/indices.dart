@@ -478,7 +478,9 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
       _f(bmrMean, 0), unit: 'kcal/die');
 
   // ---------------------------------------------------------------- Cuore e pressione
-  const gC = 'Cuore e pressione';
+  const gCuore = 'Cuore';
+  const gArt = 'Pressione e arterie';
+  const gPer = 'Periferia e perfusione';
   final pp = sbp - dbp;
   final map = dbp + 0.01 * math.exp(4.14 - 40.74 / hr) * pp;
   v['PP'] = pp;
@@ -506,7 +508,7 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
   // (es. 150/55, sistolica isolata con diastolica bassa, e' iperteso).
   final bpZone = (sbp >= 140 || dbp >= 90) ? 1 : ((sbp < 90 || dbp < 60) ? -1 : 0);
   v['BPZONE'] = bpZone.toDouble();
-  add(gC, 'BP', 'Pressione arteriosa', '${_f(sbp, 0)}/${_f(dbp, 0)}', unit: 'mmHg',
+  add(gArt, 'BP', 'Pressione arteriosa', '${_f(sbp, 0)}/${_f(dbp, 0)}', unit: 'mmHg',
       comment: bpZone < 0 ? 'Ipoteso' : (bpZone > 0 ? 'Iperteso' : 'Normoteso'), sev: bpCl.sev);
 
   // Frequenza cardiaca per fascia d'eta'
@@ -536,7 +538,7 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
   }
   final hrZone = hr < euLo[ag] ? -1 : (hr > euHi[ag] ? 1 : 0);
   v['HRZONE'] = hrZone.toDouble();
-  add(gC, 'HR', 'Frequenza cardiaca a riposo', _f(hr, 0), unit: 'bpm',
+  add(gCuore, 'HR', 'Frequenza cardiaca a riposo', _f(hr, 0), unit: 'bpm',
       reference: '${euLo[ag]} - ${euHi[ag]}',
       comment: hrZone < 0 ? 'Bradicardico' : (hrZone > 0 ? 'Tachicardico' : 'Eucardico'), sev: hrC.sev);
 
@@ -545,7 +547,7 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
       ? 203.7 / (1 + math.exp(0.033 * (age - 104.3)))
       : 190.2 / (1 + math.exp(0.0453 * (age - 107.5)));
   v['FCM'] = fcm;
-  add(gC, 'FCM', 'Frequenza cardiaca massima stimata', _f(fcm, 0), unit: 'bpm');
+  add(gCuore, 'FCM', 'Frequenza cardiaca massima stimata', _f(fcm, 0), unit: 'bpm');
 
   // Pressione di pulsazione
   {
@@ -557,7 +559,7 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
       _C('Rigidita\' arteriosa marcata', _a),
     ];
     final c = labels[cls(pp, [25, 30, 56, 66])];
-    add(gC, 'PP', 'Pressione di pulsazione', _f(pp, 0), unit: 'mmHg',
+    add(gArt, 'PP', 'Pressione di pulsazione', _f(pp, 0), unit: 'mmHg',
         reference: '30 - 55', comment: c.label, sev: c.sev);
   }
   // MAP
@@ -570,7 +572,7 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
       _C('Ipertensione significativa', _a),
     ];
     final c = labels[cls(map, [60, 70, 106, 116])];
-    add(gC, 'MAP', 'Pressione arteriosa media (MAP)', _f(map, 0), unit: 'mmHg',
+    add(gArt, 'MAP', 'Pressione arteriosa media (MAP)', _f(map, 0), unit: 'mmHg',
         reference: '70 - 105', comment: c.label, sev: c.sev);
   }
   // Indice di rigidita'
@@ -585,7 +587,7 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
       _C('Rigidita\' arteriosa marcata', _a),
     ];
     final c = labels[cls(ai, [0.30, 0.56, 0.66, 0.76])];
-    add(gC, 'AI', 'Indice di rigidita\' arteriosa', _f(ai, 2), reference: '0.30 - 0.55',
+    add(gArt, 'AI', 'Indice di rigidita\' arteriosa', _f(ai, 2), reference: '0.30 - 0.55',
         comment: c.label, sev: c.sev);
   }
   // Riserva cronotropa
@@ -600,7 +602,7 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
       _C('Riserva cronotropa ottima', _ok),
     ];
     final c = labels[cls(hrr, [60, 80, 121, 151])];
-    add(gC, 'HRR', 'Frequenza cardiaca di riserva', _f(hrr, 0), unit: 'bpm',
+    add(gCuore, 'HRR', 'Frequenza cardiaca di riserva', _f(hrr, 0), unit: 'bpm',
         reference: '80 - 120', comment: c.label, sev: c.sev);
   }
   // MSI
@@ -617,7 +619,7 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
     ];
     final c = labels[cls(msi, [0.70, 1.00, 1.30, 1.60])];
     msiSev = c.sev;
-    add(gC, 'MSI', 'Modified Shock Index', _f(msi, 2), unit: 'bpm/mmHg',
+    add(gPer, 'MSI', 'Modified Shock Index', _f(msi, 2), unit: 'bpm/mmHg',
         reference: '0.70 - 0.99', comment: c.label, sev: c.sev);
   }
   // RPP
@@ -634,7 +636,7 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
       _C('Rischio ischemia', _a),
     ];
     final c = labels[cls(rpp, [7000, 10000, 15000, 20000, 25000, 30000])];
-    add(gC, 'RPP', 'Prodotto frequenza-pressione (RPP)', _f(rpp, 0), unit: 'bpm*mmHg',
+    add(gCuore, 'RPP', 'Prodotto frequenza-pressione (RPP)', _f(rpp, 0), unit: 'bpm*mmHg',
         reference: '10000 - 14999', comment: c.label, sev: c.sev);
   }
   // Stroke volume (Starr, ricalibrato su 70 mL)
@@ -653,7 +655,7 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
       _C('Iperdinamia marcata', _a),
     ];
     final c = labels[cls(svPct, [70, 90, 111, 131])];
-    add(gC, 'SV', 'Stroke Volume', _f(sv, 0), unit: 'mL', reference: '60 - 100',
+    add(gCuore, 'SV', 'Stroke Volume', _f(sv, 0), unit: 'mL', reference: '60 - 100',
         comment: '${c.label} (${_f(svPct, 0)}% dell\'atteso)', sev: c.sev);
   }
   // Gittata cardiaca
@@ -668,7 +670,7 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
       _C('Iperdinamia marcata', _a),
     ];
     final c = labels[cls(co, [3.0, 3.5, 7.0, 8.1])];
-    add(gC, 'CO', 'Gittata cardiaca', _f(co, 1), unit: 'L/min', reference: '3.5 - 6.9',
+    add(gCuore, 'CO', 'Gittata cardiaca', _f(co, 1), unit: 'L/min', reference: '3.5 - 6.9',
         comment: c.label, sev: c.sev);
   }
   // Cardiac index
@@ -683,7 +685,7 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
       _C('Iperdinamia marcata', _a),
     ];
     final c = labels[cls(cidx, [2.0, 2.5, 4.0, 4.5])];
-    add(gC, 'CIDX', 'Cardiac Index', _f(cidx, 1), unit: 'L/min/m2', reference: '2.5 - 3.9',
+    add(gCuore, 'CIDX', 'Cardiac Index', _f(cidx, 1), unit: 'L/min/m2', reference: '2.5 - 3.9',
         comment: c.label, sev: c.sev);
   }
   // LCWI
@@ -698,7 +700,7 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
       _C('Sovraccarico ventricolare', _a),
     ];
     final c = labels[cls(lcwi, [300, 400, 900, 1050])];
-    add(gC, 'LCWI', 'Left Cardiac Work Index', _f(lcwi, 0), unit: 'mW/m2',
+    add(gCuore, 'LCWI', 'Left Cardiac Work Index', _f(lcwi, 0), unit: 'mW/m2',
         reference: '400 - 900', comment: c.label, sev: c.sev);
   }
   // SVRI
@@ -713,7 +715,7 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
       _C('Vasocostrizione marcata', _a),
     ];
     final c = labels[cls(svri, [1.8, 2.9, 3.5, 4.0])];
-    add(gC, 'SVRI', 'Indice di resistenza vascolare sistemica', _f(svri, 1), unit: 'kU*m2',
+    add(gPer, 'SVRI', 'Indice di resistenza vascolare sistemica', _f(svri, 1), unit: 'kU*m2',
         reference: '1.8 - 2.8', comment: c.label, sev: c.sev);
   }
   // ePWV (Greve 2016, equazione per popolazione generale)
@@ -727,7 +729,7 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
   v['EPWV'] = epwv;
   {
     final hi = epwv >= 10;
-    add(gC, 'EPWV', 'Velocita\' dell\'onda di polso stimata (ePWV)', _f(epwv, 1), unit: 'm/s',
+    add(gArt, 'EPWV', 'Velocita\' dell\'onda di polso stimata (ePWV)', _f(epwv, 1), unit: 'm/s',
         reference: '< 10',
         comment: hi
             ? 'Sopra la soglia di 10 m/s: stima da età e pressione, da confermare con misura'
@@ -813,8 +815,10 @@ const _order = <String>[
   'BF_CUN', 'RFM', 'NAVY', 'FM', 'FFM', 'FMI', 'FFMI', 'LBM',
   // Metabolismo
   'BMR_MEAN',
-  // Cuore e pressione: pressione, frequenza, emodinamica, vasi
-  'BP', 'PP', 'MAP', 'HR', 'HRR', 'FCM', 'MSI', 'RPP', 'SV', 'CO', 'CIDX', 'LCWI', 'SVRI', 'AI', 'EPWV',
+  // Cuore: frequenza, riserva, gittata, lavoro. Pressione e arterie. Periferia.
+  'HR', 'HRR', 'FCM', 'SV', 'CO', 'CIDX', 'LCWI', 'RPP',
+  'BP', 'PP', 'MAP', 'AI', 'EPWV',
+  'SVRI', 'MSI',
 ];
 
 List<IndexResult> _ordered(List<IndexResult> list) {

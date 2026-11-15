@@ -33,6 +33,10 @@ jobs:
           fi
           grep -n viewport web/index.html
           sed -i 's#"name": "[^"]*"#"name": "Somatwin"#; s#"short_name": "[^"]*"#"short_name": "Somatwin"#' web/manifest.json
+      - name: Icona e favicon (al posto di quelle di Flutter)
+        run: |
+          cp ci/icons/Icon-192.png ci/icons/Icon-512.png ci/icons/Icon-maskable-192.png ci/icons/Icon-maskable-512.png web/icons/
+          cp ci/icons/favicon.png web/favicon.png
       - run: rm -f test/widget_test.dart
       - run: flutter pub get
       - run: flutter build web --release --base-href "/${{ github.event.repository.name }}/"

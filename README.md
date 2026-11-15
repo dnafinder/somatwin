@@ -26,7 +26,10 @@ I dati restano sul dispositivo (archivio locale del browser o dell'app). Non c'�
 - Distribuzione del grasso: vita/altezza, vita/fianchi, ABSI (z-score), BRI, conicità, AVI, BAI.
 - Composizione corporea: grasso corporeo (CUN-BAE, RFM, US Navy), massa grassa e magra, FMI, FFMI, massa magra da altezza e peso (media di Boer, Hume e James).
 - Metabolismo: metabolismo basale, media di Mifflin-St Jeor, Harris-Benedict e Katch-McArdle.
-- Cuore e pressione: stato pressorio (ipoteso, normoteso, iperteso), frequenza (bradicardico, eucardico, tachicardico), frequenza massima, pressione di pulsazione e media, riserva cardiaca, indici emodinamici e di rigidità arteriosa, ePWV, rischio di ipertensione a 1, 2 e 4 anni (Framingham).
+- Cuore: frequenza (bradicardico, eucardico, tachicardico), frequenza massima e riserva, gittata sistolica, gittata, indice cardiaco, lavoro cardiaco, RPP.
+- Pressione e arterie: stato pressorio (ipoteso, normoteso, iperteso), pressione di pulsazione e media, rigidità arteriosa, ePWV.
+- Periferia e perfusione: resistenza vascolare sistemica, shock index modificato.
+- Rischio di ipertensione a 1, 2 e 4 anni (Framingham).
 
 Sotto ogni valore c'è una barra con la zona di riferimento e un pallino sulla posizione. Il colore del valore è quello della zona. Non hanno barra gli indici senza un intervallo di popolazione (per esempio metabolismo basale, pesi ideali, superficie corporea) e la pressione, che ha il suo stato in parole.
 
@@ -57,6 +60,7 @@ Regole di classificazione:
 Senza Flutter in locale:
 
 - **Build APK**: parte a ogni push su `main`, esegue `flutter test` e, se passa, pubblica `somatwin.apk` come Release `build-N`. L'APK è firmato con la chiave di debug in `ci/`: serve a provarlo e ad aggiornare l'app senza disinstallarla, non al Play Store. Sul telefono vanno consentite le origini sconosciute.
+- Le icone sono in `ci/icons/` e sostituiscono quelle generate da `flutter create` in entrambe le build.
 - **Publish web**: compila la versione web e la pubblica su GitHub Pages (richiede il repository pubblico e Pages impostato su "GitHub Actions").
 
 ## Licenze e fonti

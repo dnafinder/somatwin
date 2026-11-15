@@ -24,6 +24,13 @@ jobs:
         run: flutter create --platforms=android --org it.medylab --project-name digital_twin .
       - name: Nome dell'app sul telefono
         run: sed -i 's/android:label="[^"]*"/android:label="Somatwin"/' android/app/src/main/AndroidManifest.xml
+      - name: Icona dell'app (al posto di quella di Flutter)
+        run: |
+          res=android/app/src/main/res
+          rm -rf $res/mipmap-anydpi*
+          for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+            cp ci/icons/android-$d.png $res/mipmap-$d/ic_launcher.png
+          done
       - name: Rimuovi il test d'esempio generato da flutter create
         run: rm -f test/widget_test.dart
       - name: Chiave di firma fissa (per poter aggiornare l'app senza disinstallarla)
