@@ -206,6 +206,10 @@ void statiTests() {
       expect(rep(139, 89, 72).byKey('BP')!.comment, 'Normoteso');
       expect(rep(140, 85, 72).byKey('BP')!.comment, 'Iperteso');
       expect(rep(125, 90, 72).byKey('BP')!.comment, 'Iperteso');
+      // un solo valore oltre soglia basta, anche con l'altro basso
+      expect(rep(150, 55, 72).byKey('BP')!.comment, 'Iperteso');
+      expect(rep(85, 95, 72).byKey('BP')!.comment, 'Iperteso');
+      expect(rep(150, 55, 72).values['BPZONE'], 1);
     });
   
     test('bradicardico, eucardico, tachicardico (57 anni: 72 - 75 bpm)', () {

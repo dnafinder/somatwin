@@ -501,8 +501,10 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
   ];
   final bpCl = bpLabels[bpc - 1];
   v['BPC'] = bpc.toDouble();
-  // Tre stati: ipoteso sotto 90/60, iperteso da 140/90 (come la classe "Ipertensione lieve").
-  final bpZone = (sbp < 90 || dbp < 60) ? -1 : ((sbp >= 140 || dbp >= 90) ? 1 : 0);
+  // Tre stati: iperteso da 140/90, ipoteso sotto 90/60 (come la classe "Ipertensione lieve").
+  // Basta un solo valore oltre soglia: l'ipertensione ha la precedenza
+  // (es. 150/55, sistolica isolata con diastolica bassa, e' iperteso).
+  final bpZone = (sbp >= 140 || dbp >= 90) ? 1 : ((sbp < 90 || dbp < 60) ? -1 : 0);
   v['BPZONE'] = bpZone.toDouble();
   add(gC, 'BP', 'Pressione arteriosa', '${_f(sbp, 0)}/${_f(dbp, 0)}', unit: 'mmHg',
       comment: bpZone < 0 ? 'Ipoteso' : (bpZone > 0 ? 'Iperteso' : 'Normoteso'), sev: bpCl.sev);
