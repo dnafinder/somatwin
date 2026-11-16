@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:digital_twin/core/absi_table.dart';
 import 'package:digital_twin/core/indices.dart';
@@ -208,32 +209,33 @@ void main() {
     expect(cls(25, [10, 20]), 2);
   });
 
-  test('ABSI: scala a gradi con le soglie di Krakauer, senza intervallo', () {
+  test('ABSI: verde e rosso alla soglia di Krakauer, senza intervallo', () {
     final r = computeReport(_male(), const Anamnesis(), _table()).byKey('ABSI_Z')!;
-    expect(r.grades, [-0.272, 0.229, 0.798]);
+    expect(r.grades, [0.229]);
     expect(r.reference, '');
   });
 
-  test('ABSI: usa il BMI classico (atleta di 177 cm, z vicino a zero)', () {
+  test('ABSI: usa il BMI classico, non quello di Trefethen', () {
     final m = Measurements(
       sex: Sex.male,
-      birthDate: DateTime(2007, 12, 10),
-      takenOn: DateTime(2026, 11, 16),
-      weight: 71,
-      height: 177,
-      waist: 82,
-      hip: 87,
+      birthDate: DateTime(1996, 1, 1),
+      takenOn: DateTime(2026, 6, 1),
+      weight: 80,
+      height: 185,
+      waist: 85,
+      hip: 95,
       wrist: 17,
-      neck: 40,
-      calf: 39,
+      neck: 38,
+      calf: 38,
       sbp: 120,
-      dbp: 70,
+      dbp: 75,
       hr: 60,
     );
     final r = computeReport(m, const Anamnesis(), _table());
-    // Con il BMI di Trefethen lo z sarebbe +0,30, cioe' arancio.
-    expect(r.values['ABSI_Z']!, closeTo(-0.01, 0.01));
-    expect(r.values['BMI']!, closeTo(22.14, 0.005));
+    final x = 85 / (10 * math.pow(bmiClassic(80, 185), 2.0 / 3.0) * math.sqrt(185));
+    final ref = _table().lookup(m.age, Sex.male);
+    expect(r.values['ABSI']!, closeTo(x, 1e-9));
+    expect(r.values['ABSI_Z']!, closeTo((x - ref.mean) / ref.sd, 1e-9));
   });
 
   test('ABSI: tabella chiusa agli estremi', () {

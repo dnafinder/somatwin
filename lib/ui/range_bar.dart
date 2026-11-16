@@ -6,8 +6,13 @@ const Color kBarRed = Color(0xFFD9534F);
 const Color kBarYellow = Color(0xFFF2D03B);
 const Color kBarOrange = Color(0xFFF28C28);
 
-/// Scala a quattro gradi, dalla zona migliore alla peggiore.
-const List<Color> kGradedColors = [kBarGreen, kBarYellow, kBarOrange, kBarRed];
+/// Colori di una scala a gradi, dalla zona migliore alla peggiore. Due zone:
+/// verde e rosso. Tre: verde, arancio, rosso. Quattro: verde, giallo, arancio, rosso.
+List<Color> gradedPalette(int zones) => switch (zones) {
+      2 => const [kBarGreen, kBarRed],
+      3 => const [kBarGreen, kBarOrange, kBarRed],
+      _ => const [kBarGreen, kBarYellow, kBarOrange, kBarRed],
+    };
 
 /// Zona (0 = migliore) di un valore rispetto a soglie crescenti. Il valore
 /// uguale a una soglia sale alla zona successiva.
@@ -19,7 +24,8 @@ int gradeOf(List<double> cuts, double v) {
   return k;
 }
 
-Color gradeColor(List<double> cuts, double v) => kGradedColors[gradeOf(cuts, v)];
+Color gradeColor(List<double> cuts, double v) =>
+    gradedPalette(cuts.length + 1)[gradeOf(cuts, v)];
 
 /// Intervallo di riferimento letto dal testo: "a - b", "< x", "> x".
 class RefRange {
@@ -69,7 +75,7 @@ class RangeBar extends StatelessWidget {
   final String reference;
   final double? value;
 
-  /// Se non e' vuoto la barra e' a gradi (3 soglie, 4 colori) e [reference] non conta.
+  /// Se non e' vuoto la barra e' a gradi (n soglie, n+1 colori) e [reference] non conta.
   final List<double> grades;
   const RangeBar({super.key, required this.reference, required this.value, this.grades = const []});
 
@@ -102,7 +108,8 @@ class _BarPainter extends CustomPainter {
     final zones = <(double, double, Color)>[]; // frazioni 0-1
 
     if (cuts.isNotEmpty) {
-      final span = cuts.last - cuts.first;
+      // Una sola soglia: asse largo quanto le soglie di ABSI (stesso ordine di grandezza).
+      final span = cuts.length > 1 ? cuts.last - cuts.first : 1.0;
       a = cuts.first - span * 0.8;
       b = cuts.last + span * 0.8;
     } else if (lo != null && hi != null) {
@@ -126,12 +133,13 @@ class _BarPainter extends CustomPainter {
     double f(double x) => ((x - a) / (b - a)).clamp(0.0, 1.0);
 
     if (cuts.isNotEmpty) {
+      final pal = gradedPalette(cuts.length + 1);
       var from = 0.0;
       for (var k = 0; k < cuts.length; k++) {
-        zones.add((from, f(cuts[k]), kGradedColors[k]));
+        zones.add((from, f(cuts[k]), pal[k]));
         from = f(cuts[k]);
       }
-      zones.add((from, 1, kGradedColors[cuts.length]));
+      zones.add((from, 1, pal[cuts.length]));
     } else if (lo != null && hi != null) {
       zones
         ..add((0, f(lo), kBarBlue))

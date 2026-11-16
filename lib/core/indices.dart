@@ -333,10 +333,10 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
       _C('Rischio di mortalita\' molto alto', _a),
     ];
     final c = labels[cls(z, [-0.868, -0.272, 0.229, 0.798])];
-    // Piu' basso e' meglio: scala a quattro gradi (molto basso e basso insieme,
-    // media, alto, molto alto), non un intervallo con una zona "sotto la norma".
+    // Piu' basso e' meglio: verde sotto 0,229 (primi tre quintili di Krakauer),
+    // rosso da 0,229 (rischio alto e molto alto). Nessuna zona "sotto la norma".
     add(gR, 'ABSI_Z', 'A Body Shape Index (z-score)', _f(z, 2),
-        comment: c.label, sev: c.sev, grades: const [-0.272, 0.229, 0.798]);
+        comment: c.label, sev: c.sev, grades: const [0.229]);
   }
 
   // CI conicita'

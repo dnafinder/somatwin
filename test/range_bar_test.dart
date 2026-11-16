@@ -38,4 +38,12 @@ void main() {
     expect(gradeColor(cuts, 0.5), kBarOrange);
     expect(gradeColor(cuts, 1.2), kBarRed);
   });
+
+  test('scala a due gradi: verde e rosso', () {
+    const cuts = [0.229];
+    expect(gradeColor(cuts, -2.0), kBarGreen);
+    expect(gradeColor(cuts, 0.228), kBarGreen);
+    expect(gradeColor(cuts, 0.229), kBarRed);
+    expect(gradeColor(cuts, 2.5), kBarRed);
+  });
 }
