@@ -97,6 +97,11 @@ class _ResultScreenState extends State<ResultScreen> {
       }
       if (worst != null) out[tag] = zoneColorOf(worst!);
     });
+    // Vita: conta solo la circonferenza (94 cm uomini, 80 donne). Gli indici
+    // composti restano nella scheda Indici. Fianchi: nessun riferimento di
+    // rischio per la sola circonferenza, il distretto resta neutro.
+    out['waist'] = waistRaised(widget.record.m) ? kBarRed : kBarGreen;
+    out.remove('hip');
     return out;
   }
 

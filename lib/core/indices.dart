@@ -33,6 +33,13 @@ int cls(double v, List<double> thresholds) {
 
 String _f(double v, [int d = 1]) => v.toStringAsFixed(d);
 
+/// Soglia della circonferenza vita oltre la quale il rischio e' aumentato:
+/// 94 cm per gli uomini, 80 per le donne (WHO 1995-2008, IDF 2005; per l'IDF
+/// valgono come criteri adulti dai 16 anni). Il valore uguale alla soglia e' gia' sopra.
+double waistCutoff(Sex sex) => sex == Sex.male ? 94.0 : 80.0;
+
+bool waistRaised(Measurements m) => m.waist >= waistCutoff(m.sex);
+
 /// BMI di Trefethen come negli script: 1,3 * peso / altezza(m)^2,5.
 double bmiTrefethen(double weightKg, double heightCm) =>
     1.3 * weightKg / _pw(heightCm / 100, 2.5);

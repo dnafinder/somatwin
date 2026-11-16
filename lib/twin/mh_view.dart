@@ -219,8 +219,15 @@ class MhPainter extends CustomPainter {
     final pu = _pulse();
     final p = pr.project(c[0], c[1], c[2]);
     final col = _sevColor('heart');
-    canvas.drawCircle(p, 7 + 6 * pu, Paint()..color = col.withOpacity(0.25));
-    canvas.drawCircle(p, 4.5 + 2.5 * pu, Paint()..color = col);
+    // Alone: sfumatura radiale che si accende e si allarga a ogni battito
+    // (ritmo = frequenza misurata). Somma di luce, cosi' si vede anche sopra
+    // un torace gia' colorato.
+    final r = pr.base * (4.0 + 3.0 * pu);
+    final halo = Paint()
+      ..shader = ui.Gradient.radial(p, r, [col.withOpacity(0.55 + 0.35 * pu), col.withOpacity(0.0)])
+      ..blendMode = BlendMode.plus;
+    canvas.drawCircle(p, r, halo);
+    canvas.drawCircle(p, 3.0 + 2.0 * pu, Paint()..color = col);
   }
 
   void _drawLabels(Canvas canvas, Size size, TwinProjector pr) {

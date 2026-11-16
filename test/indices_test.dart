@@ -166,6 +166,28 @@ void main() {
     });
   });
 
+  test('vita: soglia 94 cm uomini, 80 donne; il valore uguale alla soglia e\' sopra', () {
+    Measurements w(Sex sex, double waist) => Measurements(
+          sex: sex,
+          birthDate: DateTime(1980, 1, 1),
+          takenOn: DateTime(2025, 6, 1),
+          weight: 70,
+          height: 170,
+          waist: waist,
+          hip: 95,
+          wrist: 17,
+          neck: 36,
+          calf: 36,
+          sbp: 120,
+          dbp: 80,
+          hr: 65,
+        );
+    expect(waistRaised(w(Sex.male, 93.9)), isFalse);
+    expect(waistRaised(w(Sex.male, 94)), isTrue);
+    expect(waistRaised(w(Sex.female, 79.9)), isFalse);
+    expect(waistRaised(w(Sex.female, 80)), isTrue);
+  });
+
   test('BSA: media troncata, 1 decimale', () {
     expect(bsaTruncatedMean(87, 173, 0), 2.0);
     expect(bsaTruncatedMean(62, 165, 1), 1.7);
