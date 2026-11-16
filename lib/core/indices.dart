@@ -207,7 +207,8 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
   add(gA, 'CREFF', 'Peso ideale (Creff)', _f(iwc), unit: 'kg');
 
   // Polpaccio corretto per BMI (sarcopenia)
-  final bmiR = mround(bmi, 1);
+  // Le classi di BMI della correzione sono quelle OMS, definite sul BMI classico.
+  final bmiR = mround(bmic, 1);
   final xb = bmiR <= 24.9 ? 0 : (bmiR <= 29.9 ? 1 : (bmiR <= 39.9 ? 2 : 3));
   final calfCorr = mround(calf - 0.5 * xb * (xb + 5), 1);
   final calfCut = 34.0 - sex;
@@ -318,7 +319,8 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
 
   // ABSI + z
   {
-    final x = waist / (10 * _pw(bmi, 2.0 / 3.0) * math.sqrt(h));
+    // Formula e tabelle NHANES di Krakauer sono costruite sul BMI classico.
+    final x = waist / (10 * _pw(bmic, 2.0 / 3.0) * math.sqrt(h));
     final ref = absi.lookup(age, m.sex);
     final z = math.max(-3.0, math.min(3.0, (x - ref.mean) / ref.sd));
     v['ABSI'] = x;
@@ -405,12 +407,12 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
   final bfCun = -44.988 +
       0.503 * age +
       10.689 * sex +
-      3.172 * bmi -
-      0.026 * bmi * bmi +
-      0.181 * bmi * sex -
-      0.02 * bmi * age -
-      0.005 * bmi * bmi * sex +
-      0.00021 * bmi * bmi * age;
+      3.172 * bmic -
+      0.026 * bmic * bmic +
+      0.181 * bmic * sex -
+      0.02 * bmic * age -
+      0.005 * bmic * bmic * sex +
+      0.00021 * bmic * bmic * age;
   v['BF_CUN'] = bfCun;
   {
     final c = bfLabels[cls(mround(bfCun), bfT)];
@@ -779,7 +781,7 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
   if (an.answered && !an.onAntihypertensives) {
     final smoke = an.smoker ? 1.0 : 0.0;
     final php = an.parentsHypertensive.toDouble();
-    final x = <double>[1, age.toDouble(), sex.toDouble(), bmi, sbp, dbp, smoke, php, age * dbp];
+    final x = <double>[1, age.toDouble(), sex.toDouble(), bmic, sbp, dbp, smoke, php, age * dbp];
     final ref = <double>[1, age.toDouble(), sex.toDouble(), 22.5, 110, 70, 0, 0, age * 70.0];
     for (final y in const [1.0, 2.0, 4.0]) {
       final r = _hypertensionRisk(y, x) * 100;

@@ -22,7 +22,7 @@ I dati restano sul dispositivo (archivio locale del browser o dell'app). Non c'√
 
 **Indici.** Raggruppati per area:
 
-- Antropometria: BMI (Trefethen e classico), indice ponderale, intervallo di peso, indice di Grant e morfotipo, pesi ideali (Lorenz, Creff), collo, polpaccio corretto per BMI, superficie e volume corporeo.
+- Antropometria: BMI (Trefethen e classico; ABSI, polpaccio corretto, grasso Cunningham-Bae e rischio di ipertensione usano il BMI classico, come nelle pubblicazioni originali), indice ponderale, intervallo di peso, indice di Grant e morfotipo, pesi ideali (Lorenz, Creff), collo, polpaccio corretto per BMI, superficie e volume corporeo.
 - Distribuzione del grasso: vita/altezza, vita/fianchi, ABSI (z-score), BRI, conicit√†, AVI, BAI.
 - Composizione corporea: grasso corporeo (CUN-BAE, RFM, US Navy), massa grassa e magra, FMI, FFMI, massa magra da altezza e peso (media di Boer, Hume e James).
 - Metabolismo: metabolismo basale, media di Mifflin-St Jeor, Harris-Benedict e Katch-McArdle.

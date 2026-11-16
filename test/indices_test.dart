@@ -72,12 +72,12 @@ void main() {
       'WHR': 1.04,
       'AVI': 22.9092,
       'WHTR': 0.62,
-      'ABSI': 0.0867,
-      'ABSI_Z': 0.7863,
+      'ABSI': 0.08605,
+      'ABSI_Z': 0.6012,
       'CI': 1.3843,
       'BRI': 5.8533,
       'BAI': 27,
-      'BF_CUN': 30.4828,
+      'BF_CUN': 30.8955,
       'BMR': 1671,
       'BEE': 1735,
       'RFM': 31.6636,
@@ -124,6 +124,9 @@ void main() {
     });
   });
 
+  // ABSI, polpaccio, Cunningham-Bae e Framingham usano il BMI classico, come
+  // pubblicato. Il referto CARDIOMET li ha calcolati con Trefethen: per questi
+  // quattro i valori attesi qui sotto sono ricalcolati, non quelli del referto.
   group('femmina 45 anni', () {
     final m = _female();
     final r = computeReport(m, const Anamnesis(answered: true, smoker: true), absi);
@@ -136,11 +139,11 @@ void main() {
       'WHR': 0.79,
       'AVI': 12.4767,
       'WHTR': 0.47,
-      'ABSI_Z': -0.8008,
+      'ABSI_Z': -0.6745,
       'CI': 1.1674,
       'BRI': 2.8616,
       'BAI': 28,
-      'BF_CUN': 33.4245,
+      'BF_CUN': 33.0224,
       'BMR': 1265,
       'BEE': 1336,
       'RFM': 33.6923,
@@ -209,6 +212,28 @@ void main() {
     final r = computeReport(_male(), const Anamnesis(), _table()).byKey('ABSI_Z')!;
     expect(r.grades, [-0.272, 0.229, 0.798]);
     expect(r.reference, '');
+  });
+
+  test('ABSI: usa il BMI classico (atleta di 177 cm, z vicino a zero)', () {
+    final m = Measurements(
+      sex: Sex.male,
+      birthDate: DateTime(2007, 12, 10),
+      takenOn: DateTime(2026, 11, 16),
+      weight: 71,
+      height: 177,
+      waist: 82,
+      hip: 87,
+      wrist: 17,
+      neck: 40,
+      calf: 39,
+      sbp: 120,
+      dbp: 70,
+      hr: 60,
+    );
+    final r = computeReport(m, const Anamnesis(), _table());
+    // Con il BMI di Trefethen lo z sarebbe +0,30, cioe' arancio.
+    expect(r.values['ABSI_Z']!, closeTo(-0.01, 0.01));
+    expect(r.values['BMI']!, closeTo(22.14, 0.005));
   });
 
   test('ABSI: tabella chiusa agli estremi', () {
