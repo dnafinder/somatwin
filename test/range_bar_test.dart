@@ -26,4 +26,16 @@ void main() {
     expect(zoneColor('> 33', 30), kBarBlue); // sotto la norma e' sempre azzurro
     expect(zoneColor('', 5), isNull);
   });
+  test('scala a gradi: il valore uguale alla soglia sale', () {
+    const cuts = [-0.272, 0.229, 0.798];
+    expect(gradeOf(cuts, -1.0), 0);
+    expect(gradeOf(cuts, -0.272), 1);
+    expect(gradeOf(cuts, 0.228), 1);
+    expect(gradeOf(cuts, 0.229), 2);
+    expect(gradeOf(cuts, 0.798), 3);
+    expect(gradeColor(cuts, -1.0), kBarGreen);
+    expect(gradeColor(cuts, 0.0), kBarYellow);
+    expect(gradeColor(cuts, 0.5), kBarOrange);
+    expect(gradeColor(cuts, 1.2), kBarRed);
+  });
 }

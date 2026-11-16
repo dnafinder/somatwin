@@ -3,6 +3,23 @@ import 'package:flutter/material.dart';
 const Color kBarBlue = Color(0xFF00E5FF);
 const Color kBarGreen = Color(0xFF3CB043);
 const Color kBarRed = Color(0xFFD9534F);
+const Color kBarYellow = Color(0xFFF2D03B);
+const Color kBarOrange = Color(0xFFF28C28);
+
+/// Scala a quattro gradi, dalla zona migliore alla peggiore.
+const List<Color> kGradedColors = [kBarGreen, kBarYellow, kBarOrange, kBarRed];
+
+/// Zona (0 = migliore) di un valore rispetto a soglie crescenti. Il valore
+/// uguale a una soglia sale alla zona successiva.
+int gradeOf(List<double> cuts, double v) {
+  var k = 0;
+  while (k < cuts.length && v >= cuts[k]) {
+    k++;
+  }
+  return k;
+}
+
+Color gradeColor(List<double> cuts, double v) => kGradedColors[gradeOf(cuts, v)];
 
 /// Intervallo di riferimento letto dal testo: "a - b", "< x", "> x".
 class RefRange {
@@ -51,19 +68,22 @@ Color zoneColorOf(int z) => z < 0 ? kBarBlue : (z > 0 ? kBarRed : kBarGreen);
 class RangeBar extends StatelessWidget {
   final String reference;
   final double? value;
-  const RangeBar({super.key, required this.reference, required this.value});
+
+  /// Se non e' vuoto la barra e' a gradi (3 soglie, 4 colori) e [reference] non conta.
+  final List<double> grades;
+  const RangeBar({super.key, required this.reference, required this.value, this.grades = const []});
 
   @override
   Widget build(BuildContext context) {
     final v = value;
-    final r = RefRange.parse(reference);
+    final r = grades.isNotEmpty ? const RefRange(null, null) : RefRange.parse(reference);
     if (v == null || r == null) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.only(top: 8),
       child: SizedBox(
         height: 26,
         width: double.infinity,
-        child: CustomPaint(painter: _BarPainter(r, v)),
+        child: CustomPaint(painter: _BarPainter(r, v, grades)),
       ),
     );
   }
@@ -72,7 +92,8 @@ class RangeBar extends StatelessWidget {
 class _BarPainter extends CustomPainter {
   final RefRange r;
   final double v;
-  _BarPainter(this.r, this.v);
+  final List<double> cuts;
+  _BarPainter(this.r, this.v, this.cuts);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -80,7 +101,11 @@ class _BarPainter extends CustomPainter {
     double a, b; // limiti dell'asse
     final zones = <(double, double, Color)>[]; // frazioni 0-1
 
-    if (lo != null && hi != null) {
+    if (cuts.isNotEmpty) {
+      final span = cuts.last - cuts.first;
+      a = cuts.first - span * 0.8;
+      b = cuts.last + span * 0.8;
+    } else if (lo != null && hi != null) {
       final span = hi - lo;
       a = lo - span * 0.8;
       b = hi + span * 0.8;
@@ -100,7 +125,14 @@ class _BarPainter extends CustomPainter {
     if (v > b) b = v + (b - a) * 0.05;
     double f(double x) => ((x - a) / (b - a)).clamp(0.0, 1.0);
 
-    if (lo != null && hi != null) {
+    if (cuts.isNotEmpty) {
+      var from = 0.0;
+      for (var k = 0; k < cuts.length; k++) {
+        zones.add((from, f(cuts[k]), kGradedColors[k]));
+        from = f(cuts[k]);
+      }
+      zones.add((from, 1, kGradedColors[cuts.length]));
+    } else if (lo != null && hi != null) {
       zones
         ..add((0, f(lo), kBarBlue))
         ..add((f(lo), f(hi), kBarGreen))
@@ -166,5 +198,5 @@ class _BarPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_BarPainter o) => o.r != r || o.v != v;
+  bool shouldRepaint(_BarPainter o) => o.r != r || o.v != v || o.cuts != cuts;
 }

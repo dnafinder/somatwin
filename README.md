@@ -31,7 +31,7 @@ I dati restano sul dispositivo (archivio locale del browser o dell'app). Non c'�
 - Periferia e perfusione: resistenza vascolare sistemica, shock index modificato.
 - Rischio di ipertensione a 1, 2 e 4 anni (Framingham, Parikh 2008). Accanto a ogni valore compaiono il rischio del profilo ottimale (BMI 22,5, 110/70, non fumatore, genitori non ipertesi) e il rapporto fra i due. Il valore è rosso se supera il profilo ottimale, verde altrimenti: nessuna soglia intermedia.
 
-Sotto ogni valore c'è una barra con la zona di riferimento e un pallino sulla posizione. Il colore del valore è quello della zona. Non hanno barra gli indici senza un intervallo di popolazione (per esempio metabolismo basale, pesi ideali, superficie corporea) e la pressione, che ha il suo stato in parole.
+Sotto ogni valore c'è una barra con la zona di riferimento e un pallino sulla posizione. L'ABSI ha una scala a quattro gradi perché più basso è meglio: verde sotto −0,272 (rischio molto basso o basso), giallo fino a 0,229 (nella media), arancio fino a 0,798 (alto), rosso oltre (molto alto). Soglie di Krakauer e Krakauer 2012; il valore uguale a una soglia passa alla zona successiva. Il colore del valore è quello della zona. Non hanno barra gli indici senza un intervallo di popolazione (per esempio metabolismo basale, pesi ideali, superficie corporea) e la pressione, che ha il suo stato in parole.
 
 Regole di classificazione:
 

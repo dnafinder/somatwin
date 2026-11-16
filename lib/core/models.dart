@@ -153,6 +153,10 @@ class IndexResult {
   final String comment;
   final Severity severity;
 
+  /// Soglie crescenti di una scala a gradi (3 soglie = 4 zone, dalla migliore
+  /// alla peggiore). Vuoto per gli indici con un intervallo di riferimento.
+  final List<double> grades;
+
   const IndexResult({
     required this.group,
     required this.key,
@@ -162,6 +166,7 @@ class IndexResult {
     this.reference = '',
     this.comment = '',
     this.severity = Severity.info,
+    this.grades = const [],
   });
 }
 

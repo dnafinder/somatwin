@@ -205,6 +205,12 @@ void main() {
     expect(cls(25, [10, 20]), 2);
   });
 
+  test('ABSI: scala a gradi con le soglie di Krakauer, senza intervallo', () {
+    final r = computeReport(_male(), const Anamnesis(), _table()).byKey('ABSI_Z')!;
+    expect(r.grades, [-0.272, 0.229, 0.798]);
+    expect(r.reference, '');
+  });
+
   test('ABSI: tabella chiusa agli estremi', () {
     expect(absi.lookup(1, Sex.male).sd, absi.lookup(2, Sex.male).sd);
     expect(absi.lookup(99, Sex.female).mean, absi.lookup(85, Sex.female).mean);

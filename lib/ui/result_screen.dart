@@ -348,13 +348,15 @@ Color _riskColor(Severity sv) {
 Color _valueColor(IndexResult r, double? value, Map<String, double> values) {
   if (r.key == 'BP') return zoneColorOf((values['BPZONE'] ?? 0).round());
   if (r.key.startsWith('HT')) return _riskColor(r.severity);
+  final gv = value ?? double.tryParse(r.value);
+  if (r.grades.isNotEmpty && gv != null) return gradeColor(r.grades, gv);
   return zoneColor(r.reference, value ?? double.tryParse(r.value)) ?? sevColor(r.severity);
 }
 
 /// Sotto il valore: barra di riferimento. Pressione, frequenza e Grant
 /// aggiungono lo stato in parole (la pressione non ha una barra).
 Widget _under(IndexResult r, double? value, Map<String, double> values) {
-  final bar = RangeBar(reference: r.reference, value: value ?? double.tryParse(r.value));
+  final bar = RangeBar(reference: r.reference, grades: r.grades, value: value ?? double.tryParse(r.value));
   switch (r.key) {
     case 'GRANT':
       return Padding(

@@ -121,7 +121,11 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
   final notes = <String>[];
 
   void add(String group, String key, String label, String value,
-      {String unit = '', String reference = '', String comment = '', Severity sev = Severity.info}) {
+      {String unit = '',
+      String reference = '',
+      String comment = '',
+      Severity sev = Severity.info,
+      List<double> grades = const []}) {
     out.add(IndexResult(
       group: group,
       key: key,
@@ -131,6 +135,7 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
       reference: reference,
       comment: comment,
       severity: sev,
+      grades: grades,
     ));
   }
 
@@ -326,8 +331,10 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
       _C('Rischio di mortalita\' molto alto', _a),
     ];
     final c = labels[cls(z, [-0.868, -0.272, 0.229, 0.798])];
+    // Piu' basso e' meglio: scala a quattro gradi (molto basso e basso insieme,
+    // media, alto, molto alto), non un intervallo con una zona "sotto la norma".
     add(gR, 'ABSI_Z', 'A Body Shape Index (z-score)', _f(z, 2),
-        reference: '-0.272 - 0.228', comment: c.label, sev: c.sev);
+        comment: c.label, sev: c.sev, grades: const [-0.272, 0.229, 0.798]);
   }
 
   // CI conicita'
