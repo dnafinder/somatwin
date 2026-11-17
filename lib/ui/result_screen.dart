@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'package:url_launcher/url_launcher.dart';
+
 import '../core/absi_table.dart';
+import '../core/commento.dart';
 import '../core/indices.dart';
 import '../core/models.dart';
 import '../storage.dart';
@@ -27,6 +30,7 @@ class ResultScreen extends StatefulWidget {
 
 class _ResultScreenState extends State<ResultScreen> {
   late final Report _report;
+  late final Comment _comment;
   late final Report? _prevReport;
   late final BodyModel _body;
   late final BodyModel? _prevBody;
@@ -41,6 +45,7 @@ class _ResultScreenState extends State<ResultScreen> {
     super.initState();
     final r = widget.record;
     _report = computeReport(r.m, r.an, widget.absi);
+    _comment = buildComment(_report, r.m);
     _body = buildBody(r.m);
     final p = widget.previous;
     _prevReport = p == null ? null : computeReport(p.m, p.an, widget.absi);
@@ -173,7 +178,7 @@ class _ResultScreenState extends State<ResultScreen> {
   Widget build(BuildContext context) {
     final hasPrev = _prevReport != null;
     return DefaultTabController(
-      length: hasPrev ? 3 : 2,
+      length: hasPrev ? 4 : 3,
       child: Scaffold(
         appBar: AppBar(
           toolbarHeight: kToolbarHeight * kLabelScale,
@@ -193,12 +198,14 @@ class _ResultScreenState extends State<ResultScreen> {
           bottom: TabBar(tabs: [
             Tab(height: 46 * kLabelScale, text: 'Twin'),
             Tab(height: 46 * kLabelScale, text: 'Indici'),
+            Tab(height: 46 * kLabelScale, text: 'Commento'),
             if (hasPrev) Tab(height: 46 * kLabelScale, text: 'Confronto'),
           ]),
         ),
         body: TabBarView(children: [
           _twinTab(),
           _indexTab(),
+          _commentTab(),
           if (hasPrev) _compareTab(),
         ]),
       ),
@@ -293,6 +300,84 @@ class _ResultScreenState extends State<ResultScreen> {
           Padding(padding: const EdgeInsets.only(top: 8), child: Text(n, style: const TextStyle(fontSize: 12))),
         const SizedBox(height: 16),
         Text(kDisclaimer, style: const TextStyle(fontSize: 11)),
+      ],
+    );
+  }
+
+  Future<void> _open(String url) async {
+    try {
+      final ok = await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+      if (ok) return;
+    } catch (_) {}
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Non riesco ad aprire il link.')),
+    );
+  }
+
+  Widget _commentTab() {
+    final c = _comment;
+    final theme = Theme.of(context);
+    final body = theme.textTheme.bodyMedium;
+    return ListView(
+      padding: const EdgeInsets.all(12),
+      children: [
+        for (final s in c.sections)
+          Card(
+            margin: const EdgeInsets.only(bottom: 10),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(children: [
+                  Expanded(child: Text(s.title, style: theme.textTheme.titleMedium)),
+                  Text(s.esito.label,
+                      style: TextStyle(
+                          color: sevColor(s.esito.severity), fontWeight: FontWeight.w600, fontSize: 12)),
+                ]),
+                const SizedBox(height: 8),
+                Text(s.text, style: body),
+              ]),
+            ),
+          ),
+        Card(
+          margin: const EdgeInsets.only(bottom: 10),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('In sintesi', style: theme.textTheme.titleMedium),
+              const SizedBox(height: 8),
+              Text(c.summary, style: body),
+              if (c.lifestyle != null) ...[
+                const SizedBox(height: 8),
+                Text(c.lifestyle!, style: body),
+              ],
+            ]),
+          ),
+        ),
+        Card(
+          margin: const EdgeInsets.only(bottom: 10),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(c.ctaLead, style: body?.copyWith(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 8),
+              Text(c.ctaBody, style: body),
+              const SizedBox(height: 12),
+              for (final l in c.links)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(onPressed: () => _open(l.url), child: Text(l.label)),
+                  ),
+                ),
+            ]),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(4, 4, 4, 16),
+          child: Text(c.closing, style: const TextStyle(fontSize: 12)),
+        ),
       ],
     );
   }

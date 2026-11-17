@@ -312,6 +312,7 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
       _C('Corporatura obesa', _a),
     ];
     final c = labels[cls(whtr, t)];
+    v['WHTR_CLS'] = cls(whtr, t).toDouble(); // 0 gracile ... 5 obesa
     worstWaist = worst(worstWaist, c.sev);
     add(gR, 'WHTR', 'Rapporto vita/altezza', _f(whtr, 2),
         reference: '${_f(t[1], 2)} - ${_f(t[2] - 0.01, 2)}', comment: c.label, sev: c.sev);
@@ -385,6 +386,7 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
       _C('Obeso', _a),
     ];
     final c = labels[cls(bai, t)];
+    v['BAI_CLS'] = cls(bai, t).toDouble(); // 0 sottopeso ... 3 obeso
     add(gR, 'BAI', 'Body Adiposity Index (BAI)', _f(bai, 0), unit: '%',
         reference: '${_f(t[0], 0)} - ${_f(t[1] - 1, 0)}', comment: c.label, sev: c.sev);
   }
@@ -416,6 +418,7 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
   v['BF_CUN'] = bfCun;
   {
     final c = bfLabels[cls(mround(bfCun), bfT)];
+    v['BF_CUN_CLS'] = cls(mround(bfCun), bfT).toDouble(); // 0 magrezza ... 5 adipe
     add(gB, 'BF_CUN', 'Grasso corporeo (CUN-BAE)', _f(mround(bfCun), 0), unit: '%',
         reference: bfRef, comment: c.label, sev: c.sev);
   }
@@ -424,6 +427,7 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
   v['RFM'] = rfm;
   {
     final c = bfLabels[cls(mround(rfm), bfT)];
+    v['RFM_CLS'] = cls(mround(rfm), bfT).toDouble();
     final obCut = sex == 0 ? 30.0 : 40.0;
     final ob = rfm >= obCut;
     add(gB, 'RFM', 'Relative Fat Mass (RFM)', _f(rfm, 1), unit: '%',
@@ -442,6 +446,7 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
   v['NAVY'] = navy;
   {
     final c = bfLabels[cls(mround(navy), bfT)];
+    v['NAVY_CLS'] = cls(mround(navy), bfT).toDouble();
     add(gB, 'NAVY', 'Grasso corporeo (metodo US Navy)', _f(navy, 1), unit: '%',
         reference: bfRef, comment: c.label, sev: c.sev);
   }
