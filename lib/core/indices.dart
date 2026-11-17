@@ -225,29 +225,25 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
   add(gA, 'CALFCORR', 'Circonferenza del polpaccio corretta per BMI', _f(calfCorr),
       unit: 'cm', reference: '> ${_f(calfCut)}', comment: calfC.label, sev: calfC.sev);
 
-  // Collo (soglie di screening: Ben-Noun 2001; apnee notturne: 43 cm M, 41 cm F)
+  // Collo: conta solo come criterio STOP-BANG per le apnee notturne (uomo, BMI
+  // classico > 35, collo > 40 cm). Rosso solo se i tre criteri sono presenti.
   {
-    final t1 = sex == 0 ? 37.0 : 34.0;
-    final t2 = sex == 0 ? 39.5 : 36.5;
-    final tOsa = sex == 0 ? 43.0 : 41.0;
-    _C c;
-    if (neck >= t2) {
-      c = const _C('Oltre la soglia associata a BMI >= 30', _a);
-    } else if (neck >= t1) {
-      c = const _C('Oltre la soglia associata a BMI >= 25', _w);
+    final stopBang = sex == 0 && bmic > 35 && neck > 40;
+    final String comment;
+    if (stopBang) {
+      comment = 'Collo oltre 40 cm con BMI oltre 35 in un uomo: criterio STOP-BANG, '
+          'rischio di apnee notturne da valutare';
+    } else if (neck > 40) {
+      comment = 'Collo oltre 40 cm, ma il criterio STOP-BANG richiede anche sesso maschile e BMI oltre 35';
     } else {
-      c = const _C('Sotto le soglie di screening', _ok);
+      comment = 'Sotto la soglia di screening STOP-BANG';
     }
-    var comment = c.label;
-    var sev = c.sev;
-    if (neck >= tOsa) {
-      comment = '$comment. Oltre ${_f(tOsa, 0)} cm: rischio di apnee notturne da valutare';
-      sev = Severity.alert;
-    }
+    final sev = stopBang ? Severity.alert : _ok;
     v['NECK'] = neck;
+    v['NECK_STOPBANG'] = stopBang ? 1.0 : 0.0;
     body['neck'] = sev;
     add(gA, 'NECK', 'Circonferenza del collo', _f(neck), unit: 'cm',
-        reference: '< ${_f(t1)}', comment: comment, sev: sev);
+        reference: sex == 0 ? '< 40' : '', comment: comment, sev: sev);
   }
 
   // ---------------------------------------------------------------- Rischio addominale

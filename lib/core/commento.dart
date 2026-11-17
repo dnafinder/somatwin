@@ -182,13 +182,10 @@ CommentSection _pesoMorfotipo(Report r, Profilo p) {
     parts.add('Il BMI è $bmi, nella fascia $fascia$coda. Il morfotipo è $morfo.');
   }
 
-  if (_off(r, 'NECK')) {
-    if (p == Profilo.muscolare) {
-      parts.add('Il collo è sopra il riferimento, coerente con la massa muscolare.');
-    } else {
-      parts.add('La circonferenza del collo è sopra il riferimento.');
-      esito = _max(esito, _fromSev(_sev(r, 'NECK')));
-    }
+  if (_num(r, 'NECK_STOPBANG') > 0) {
+    parts.add('Il collo supera 40 cm con BMI oltre 35 in un uomo: è uno dei criteri dello STOP-BANG '
+        'per le apnee notturne, da valutare con il medico.');
+    esito = Esito.daApprofondire;
   }
   if (_off(r, 'CALFCORR')) {
     parts.add('Il polpaccio, corretto per il BMI, è sotto la soglia di riferimento per la massa muscolare.');
