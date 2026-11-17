@@ -106,6 +106,9 @@ class _ResultScreenState extends State<ResultScreen> {
     // composti restano nella scheda Indici. Fianchi: nessun riferimento di
     // rischio per la sola circonferenza, il distretto resta neutro.
     out['waist'] = waistRaised(widget.record.m) ? kBarRed : kBarGreen;
+    // Cuore: l'etichetta mostra i battiti, quindi il colore segue solo la
+    // frequenza a riposo. Pressione e indici derivati restano nella scheda Indici.
+    out['heart'] = zoneColorOf((_report.values['HRZONE'] ?? 0).round());
     out.remove('hip');
     return out;
   }
