@@ -136,18 +136,18 @@ void main() {
     final obesoF = _m(age: 50, weight: 105, height: 160, waist: 110, hip: 120, wrist: 17, neck: 44, calf: 40, sbp: 130, dbp: 85, hr: 78, sex: Sex.female);
     final collo40M = _m(age: 40, weight: 90, height: 180, waist: 95, hip: 100, wrist: 18, neck: 42, calf: 40, sbp: 120, dbp: 80, hr: 70);
 
-    test('uomo, BMI > 35, collo > 40: rosso e commento', () {
+    test('BMI > 35 e collo > 40: rosso e commento', () {
       final r = computeReport(obesoM, const Anamnesis(), _table());
       expect(r.byKey('NECK')!.severity, Severity.alert);
       expect(r.values['NECK_STOPBANG'], 1.0);
       expect(_sec(buildComment(r, obesoM), 'Peso e morfotipo').text, contains('STOP-BANG'));
     });
-    test('donna con BMI > 35 e collo > 40: non rosso', () {
+    test('donna con BMI > 35 e collo > 40: rosso come l\'uomo', () {
       final r = computeReport(obesoF, const Anamnesis(), _table());
-      expect(r.byKey('NECK')!.severity, Severity.ok);
-      expect(r.values['NECK_STOPBANG'], 0.0);
+      expect(r.byKey('NECK')!.severity, Severity.alert);
+      expect(r.values['NECK_STOPBANG'], 1.0);
     });
-    test('uomo con BMI <= 35 e collo > 40: non rosso', () {
+    test('BMI <= 35 e collo > 40: non rosso', () {
       final r = computeReport(collo40M, const Anamnesis(), _table());
       expect(r.byKey('NECK')!.severity, Severity.ok);
       expect(r.values['NECK_STOPBANG'], 0.0);

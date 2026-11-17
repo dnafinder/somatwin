@@ -108,7 +108,7 @@ class _ResultScreenState extends State<ResultScreen> {
     out['waist'] = waistRaised(widget.record.m) ? kBarRed : kBarGreen;
     // Cuore: l'etichetta mostra i battiti, quindi il colore segue solo la
     // frequenza a riposo. Pressione e indici derivati restano nella scheda Indici.
-    // Collo: rosso solo con il criterio STOP-BANG (uomo, BMI > 35, collo > 40 cm).
+    // Collo: rosso solo con i criteri STOP-BANG del corpo (BMI > 35, collo > 40 cm).
     out['neck'] = (_report.values['NECK_STOPBANG'] ?? 0) > 0 ? kBarRed : kBarGreen;
     out['heart'] = zoneColorOf((_report.values['HRZONE'] ?? 0).round());
     out.remove('hip');

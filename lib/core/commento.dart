@@ -183,7 +183,7 @@ CommentSection _pesoMorfotipo(Report r, Profilo p) {
   }
 
   if (_num(r, 'NECK_STOPBANG') > 0) {
-    parts.add('Il collo supera 40 cm con BMI oltre 35 in un uomo: è uno dei criteri dello STOP-BANG '
+    parts.add('Il collo supera 40 cm con BMI oltre 35: sono due dei criteri dello STOP-BANG '
         'per le apnee notturne, da valutare con il medico.');
     esito = Esito.daApprofondire;
   }
