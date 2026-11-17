@@ -31,6 +31,15 @@ jobs:
           for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
             cp ci/icons/android-$d.png $res/mipmap-$d/ic_launcher.png
           done
+      - name: Disattiva il lint vitale in release (crasha dentro url_launcher_android, bug del tool)
+        run: |
+          f=android/app/build.gradle.kts
+          [ -f "$f" ] || f=android/app/build.gradle
+          if [ "${f##*.}" = kts ]; then
+            printf '\nandroid {\n    lint {\n        checkReleaseBuilds = false\n    }\n}\n' >> "$f"
+          else
+            printf '\nandroid {\n    lintOptions {\n        checkReleaseBuilds false\n    }\n}\n' >> "$f"
+          fi
       - name: Rimuovi il test d'esempio generato da flutter create
         run: rm -f test/widget_test.dart
       - name: Chiave di firma fissa (per poter aggiornare l'app senza disinstallarla)
