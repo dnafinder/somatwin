@@ -49,6 +49,10 @@ class _InputScreenState extends State<InputScreen> {
   bool _smoker = false;
   int _parents = 0;
   bool _drugs = false;
+  bool _cvEvent = false;
+  bool _tg = false;
+  bool _hdl = false;
+  bool _glu = false;
 
   @override
   void initState() {
@@ -59,6 +63,10 @@ class _InputScreenState extends State<InputScreen> {
       _smoker = t.an.smoker;
       _parents = t.an.parentsHypertensive;
       _drugs = t.an.onAntihypertensives;
+      _cvEvent = t.an.cvEvent;
+      _tg = t.an.highTriglycerides;
+      _hdl = t.an.lowHdl;
+      _glu = t.an.highGlucose;
     }
     final e = widget.edit;
     if (e != null) {
@@ -109,6 +117,10 @@ class _InputScreenState extends State<InputScreen> {
       _smoker = false;
       _parents = 1;
       _drugs = false;
+      _cvEvent = false;
+      _tg = false;
+      _hdl = false;
+      _glu = false;
     });
     _form.currentState?.validate();
   }
@@ -145,6 +157,10 @@ class _InputScreenState extends State<InputScreen> {
       smoker: _anamnesis && _smoker,
       parentsHypertensive: _anamnesis ? _parents : 0,
       onAntihypertensives: _anamnesis && _drugs,
+      cvEvent: _anamnesis && _cvEvent,
+      highTriglycerides: _anamnesis && _tg,
+      lowHdl: _anamnesis && _hdl,
+      highGlucose: _anamnesis && _glu,
     );
     Navigator.of(context).pop(Record(widget.edit?.id ?? now.microsecondsSinceEpoch.toString(), m, an,
         subjectId: widget.subject.id));
@@ -199,7 +215,8 @@ class _InputScreenState extends State<InputScreen> {
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: const Text('Aggiungi anamnesi (facoltativa)'),
-              subtitle: const Text('Serve solo al rischio di ipertensione a 1, 2 e 4 anni.'),
+              subtitle: const Text(
+                  'Serve al rischio di ipertensione a 1, 2 e 4 anni e alla scelta dell\'equazione della velocità dell\'onda di polso.'),
               value: _anamnesis,
               onChanged: (v) => setState(() => _anamnesis = v),
             ),
@@ -227,6 +244,30 @@ class _InputScreenState extends State<InputScreen> {
                 title: const Text('In terapia antipertensiva'),
                 value: _drugs,
                 onChanged: (v) => setState(() => _drugs = v),
+              ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Infarto o ictus pregressi'),
+                value: _cvEvent,
+                onChanged: (v) => setState(() => _cvEvent = v),
+              ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Trigliceridi \u2265 150 mg/dL o in terapia'),
+                value: _tg,
+                onChanged: (v) => setState(() => _tg = v),
+              ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('HDL basso (< 40 uomo, < 50 donna) o in terapia'),
+                value: _hdl,
+                onChanged: (v) => setState(() => _hdl = v),
+              ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Glicemia a digiuno \u2265 100 mg/dL, diabete o terapia'),
+                value: _glu,
+                onChanged: (v) => setState(() => _glu = v),
               ),
             ],
             const SizedBox(height: 16),

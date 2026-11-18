@@ -737,22 +737,43 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
     add(gPer, 'SVRI', 'Indice di resistenza vascolare sistemica', _f(svri, 1), unit: 'kU*m2',
         reference: '1.8 - 2.8', comment: c.label, sev: c.sev);
   }
-  // ePWV (Greve 2016, equazione per popolazione generale)
+  // ePWV: equazioni del Reference Values for Arterial Stiffness' Collaboration
+  // (Boutouyrie 2010, Eur Heart J 31:2338, doi 10.1093/eurheartj/ehq165), usate
+  // da Greve 2016 (J Hypertens 34:1279, doi 10.1097/HJH.0000000000000935).
+  // Due equazioni: popolazione di riferimento (con fattori di rischio) e
+  // popolazione normale (senza). Senza anamnesi si usa la prima, prudente.
+  // Sono "senza fattori di rischio" i non fumatori, senza infarto o ictus e
+  // con meno di 3 criteri su 5 della sindrome metabolica. Coefficienti della
+  // seconda equazione come stampati in Prelevic 2024 (J Clin Med 13:3377),
+  // fonte secondaria: non confrontati con il supplemento originale.
   final mbp = dbp + 0.4 * (sbp - dbp);
-  final epwv = 9.58748315543126 -
-      0.402467539733184 * age +
-      4.56020798207263e-3 * age * age -
-      2.6207705511664e-5 * age * age * mbp +
-      3.1762450559276e-3 * age * mbp -
-      1.83215068503821e-2 * mbp;
+  final metsCount = (waistRaised(m) ? 1 : 0) +
+      ((sbp >= 130 || dbp >= 85 || an.onAntihypertensives) ? 1 : 0) +
+      (an.highTriglycerides ? 1 : 0) +
+      (an.lowHdl ? 1 : 0) +
+      (an.highGlucose ? 1 : 0);
+  final noRisk = an.answered && !an.smoker && !an.cvEvent && metsCount < 3;
+  final double epwv;
+  if (noRisk) {
+    epwv = 4.62 - 0.13 * age + 0.0018 * age * age + 0.0006 * age * mbp + 0.0284 * mbp;
+  } else {
+    epwv = 9.58748315543126 -
+        0.402467539733184 * age +
+        4.56020798207263e-3 * age * age -
+        2.6207705511664e-5 * age * age * mbp +
+        3.1762450559276e-3 * age * mbp -
+        1.83215068503821e-2 * mbp;
+  }
   v['EPWV'] = epwv;
+  v['EPWV_NORISK'] = noRisk ? 1.0 : 0.0;
   {
     final hi = epwv >= 10;
+    final eq = noRisk ? 'equazione per soggetti senza fattori di rischio' : 'equazione per soggetti con fattori di rischio o anamnesi assente';
     add(gArt, 'EPWV', 'Velocita\' dell\'onda di polso stimata (ePWV)', _f(epwv, 1), unit: 'm/s',
         reference: '< 10',
         comment: hi
-            ? 'Sopra la soglia di 10 m/s: stima da età e pressione, da confermare con misura'
-            : 'Sotto la soglia di 10 m/s (stima da età e pressione)',
+            ? 'Sopra la soglia di 10 m/s: stima da età e pressione ($eq), da confermare con misura'
+            : 'Sotto la soglia di 10 m/s (stima da età e pressione, $eq)',
         sev: hi ? _a : _ok);
   }
 

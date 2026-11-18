@@ -105,7 +105,6 @@ void main() {
       'CIDX': 1.8,
       'LCWI': 401,
       'SVRI': 4.4,
-      'EPWV': 9.4843,
     };
     gold.forEach((k, g) {
       test(k, () {
@@ -119,6 +118,34 @@ void main() {
       expect(r.byKey('HR')!.comment, 'Bradicardico');
       expect(r.values['BPZONE'], 0);
       expect(r.values['HRZONE'], -1);
+    });
+    // ePWV dipende solo da eta' e pressione. Due equazioni (Boutouyrie 2010):
+    // con fattori di rischio, o senza (non fumatore, niente infarto/ictus,
+    // meno di 3 criteri su 5 della sindrome metabolica).
+    test('ePWV: equazione con fattori di rischio se fuma', () {
+      final x = computeReport(m, const Anamnesis(answered: true, smoker: true), absi);
+      expect(x.values['EPWV_NORISK'], 0);
+      expect(x.values['EPWV'], closeTo(9.4843, 1e-3));
+    });
+    test('ePWV: senza anamnesi resta l\'equazione con fattori di rischio', () {
+      final x = computeReport(m, const Anamnesis(), absi);
+      expect(x.values['EPWV_NORISK'], 0);
+      expect(x.values['EPWV'], closeTo(9.4843, 1e-3));
+    });
+    test('ePWV: anamnesi negativa, 2 criteri su 5 (vita e pressione) -> equazione senza fattori', () {
+      // 4.62 - 0.13*57 + 0.0018*57^2 + 0.0006*57*MBP + 0.0284*MBP, MBP = 87 + 0.4*(128-87) = 103.4
+      final x = computeReport(m, const Anamnesis(answered: true), absi);
+      expect(x.values['EPWV_NORISK'], 1);
+      expect(x.values['EPWV'], closeTo(9.53104, 1e-3));
+    });
+    test('ePWV: sindrome metabolica (3 criteri su 5) -> equazione con fattori', () {
+      final x = computeReport(m, const Anamnesis(answered: true, highTriglycerides: true), absi);
+      expect(x.values['EPWV_NORISK'], 0);
+      expect(x.values['EPWV'], closeTo(9.4843, 1e-3));
+    });
+    test('ePWV: infarto o ictus pregressi -> equazione con fattori', () {
+      final x = computeReport(m, const Anamnesis(answered: true, cvEvent: true), absi);
+      expect(x.values['EPWV_NORISK'], 0);
     });
     test('AVI corretto, non il valore del referto (15.55)', () {
       expect(r.values['AVI']!, isNot(closeTo(15.5466, 0.5)));

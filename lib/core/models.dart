@@ -120,11 +120,26 @@ class Anamnesis {
   final int parentsHypertensive;
   final bool onAntihypertensives;
 
+  /// Infarto o ictus pregressi.
+  final bool cvEvent;
+
+  /// Criteri della sindrome metabolica che le misure non danno (vita e
+  /// pressione si leggono dalle misure): trigliceridi >= 150 mg/dL o terapia,
+  /// HDL < 40 (uomo) / < 50 (donna) mg/dL o terapia, glicemia a digiuno
+  /// >= 100 mg/dL o diabete/terapia.
+  final bool highTriglycerides;
+  final bool lowHdl;
+  final bool highGlucose;
+
   const Anamnesis({
     this.answered = false,
     this.smoker = false,
     this.parentsHypertensive = 0,
     this.onAntihypertensives = false,
+    this.cvEvent = false,
+    this.highTriglycerides = false,
+    this.lowHdl = false,
+    this.highGlucose = false,
   });
 
   Map<String, dynamic> toJson() => {
@@ -132,6 +147,10 @@ class Anamnesis {
         'smoker': smoker,
         'php': parentsHypertensive,
         'hp': onAntihypertensives,
+        'cve': cvEvent,
+        'tg': highTriglycerides,
+        'hdl': lowHdl,
+        'glu': highGlucose,
       };
 
   factory Anamnesis.fromJson(Map<String, dynamic> j) => Anamnesis(
@@ -139,6 +158,11 @@ class Anamnesis {
         smoker: j['smoker'] as bool,
         parentsHypertensive: (j['php'] as num).toInt(),
         onAntihypertensives: j['hp'] as bool,
+        // Salvataggi precedenti non hanno questi campi.
+        cvEvent: j['cve'] as bool? ?? false,
+        highTriglycerides: j['tg'] as bool? ?? false,
+        lowHdl: j['hdl'] as bool? ?? false,
+        highGlucose: j['glu'] as bool? ?? false,
       );
 }
 
