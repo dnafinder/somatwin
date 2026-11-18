@@ -737,7 +737,14 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
     add(gPer, 'SVRI', 'Indice di resistenza vascolare sistemica', _f(svri, 1), unit: 'kU*m2',
         reference: '1.8 - 2.8', comment: c.label, sev: c.sev);
   }
-  // ePWV (Greve 2016, equazione per popolazione generale)
+  // ePWV: equazione della popolazione di riferimento del Reference Values for
+  // Arterial Stiffness' Collaboration (Boutouyrie 2010, Eur Heart J 31:2338,
+  // doi 10.1093/eurheartj/ehq165), come usata da Greve 2016 (J Hypertens
+  // 34:1279, doi 10.1097/HJH.0000000000000935). Una sola equazione per tutti:
+  // l'altra (senza fattori di rischio) differisce di meno di 0.4 m/s e
+  // richiederebbe dati di anamnesi che il referto non ha completi.
+  // MBP = PAD + 0.4 (PAS - PAD). Coefficienti confrontati con Prelevic 2024
+  // (J Clin Med 13:3377), non con il supplemento originale.
   final mbp = dbp + 0.4 * (sbp - dbp);
   final epwv = 9.58748315543126 -
       0.402467539733184 * age +
