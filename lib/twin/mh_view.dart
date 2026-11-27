@@ -57,6 +57,9 @@ class MhPainter extends CustomPainter {
   final double time;
   final double heartRate;
 
+  /// Centro della vista (x, y, z in cm); null = centro del corpo.
+  final List<double>? focus;
+
   MhPainter({
     required this.body,
     required this.previous,
@@ -68,6 +71,7 @@ class MhPainter extends CustomPainter {
     required this.zoom,
     required this.time,
     required this.heartRate,
+    this.focus,
   });
 
   Color _sevColor(String key) => colors[key] ?? kWireColor;
@@ -138,14 +142,15 @@ class MhPainter extends CustomPainter {
     final h = body.height;
     final nv = buf.nv;
     final pos = body.pos, nor = body.nor;
+    final fx = focus?[0] ?? 0.0, fy = focus?[1] ?? h * 0.5, fz = focus?[2] ?? 0.0;
     final w2 = pr.size.width / 2 + pr.ox, h2 = pr.size.height / 2;
     final bd = pr.base * pr.d;
     final dd = pr.d;
     var zmin = double.infinity, zmax = -double.infinity;
     for (var v = 0; v < nv; v++) {
-      final px = pos[v * 3];
-      final py = pos[v * 3 + 1] - h * 0.5;
-      final pz = pos[v * 3 + 2];
+      final px = pos[v * 3] - fx;
+      final py = pos[v * 3 + 1] - fy;
+      final pz = pos[v * 3 + 2] - fz;
       final x1 = px * cy + pz * sy;
       final z1 = -px * sy + pz * cy;
       final y2 = py * cp - z1 * sp;
@@ -261,7 +266,7 @@ class MhPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final pr = TwinProjector(yaw, zoom, size, body.height);
+    final pr = TwinProjector(yaw, zoom, size, body.height, focus: focus);
     _drawGround(canvas, pr);
     if (previous != null) _drawGhost(canvas, pr, previous!);
     _drawMesh(canvas, pr);
@@ -270,7 +275,7 @@ class MhPainter extends CustomPainter {
   }
 
   String? hit(Offset p, Size size) {
-    final pr = TwinProjector(yaw, zoom, size, body.height);
+    final pr = TwinProjector(yaw, zoom, size, body.height, focus: focus);
     String? best;
     var bestD = 36.0;
     body.rings.forEach((tag, polys) {
@@ -301,6 +306,11 @@ class MhTwinView extends StatefulWidget {
   final double heartRate;
   final void Function(String tag)? onTapPart;
 
+  /// Vista iniziale: centro (x, y, z in cm), ingrandimento e rotazione.
+  /// Servono alla guida alle misure per inquadrare un distretto.
+  final List<double>? focus;
+  final double initialZoom;
+
   const MhTwinView({
     super.key,
     required this.body,
@@ -309,6 +319,8 @@ class MhTwinView extends StatefulWidget {
     required this.heartRate,
     this.previous,
     this.onTapPart,
+    this.focus,
+    this.initialZoom = 1.0,
   });
 
   @override
@@ -321,7 +333,7 @@ class _MhTwinViewState extends State<MhTwinView> with SingleTickerProviderStateM
   late _Buf _buf;
   double _t = 0;
   double _yaw = 0.5;
-  double _zoom = 1.0;
+  late double _zoom = widget.initialZoom;
   double _zoomStart = 1.0;
   bool _auto = true;
   Duration _last = Duration.zero;
@@ -368,6 +380,7 @@ class _MhTwinViewState extends State<MhTwinView> with SingleTickerProviderStateM
         zoom: _zoom,
         time: _t,
         heartRate: widget.heartRate,
+        focus: widget.focus,
       );
 
   @override

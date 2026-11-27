@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../core/models.dart';
 import '../storage.dart';
 import 'confirm.dart' show fmtDate;
+import 'guida_misure.dart';
 
 class _Field {
   final String key;
@@ -184,7 +185,16 @@ class _InputScreenState extends State<InputScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.edit == null ? 'Nuova misura' : 'Correggi la misura')),
+      appBar: AppBar(
+        title: Text(widget.edit == null ? 'Nuova misura' : 'Correggi la misura'),
+        actions: [
+          IconButton(
+            tooltip: 'Come si prendono le misure',
+            icon: const Icon(Icons.help_outline),
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MeasureGuideScreen())),
+          ),
+        ],
+      ),
       body: Form(
         key: _form,
         child: ListView(

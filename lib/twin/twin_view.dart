@@ -153,6 +153,11 @@ class TwinProjector {
   final double zoom;
   final Size size;
   final double height;
+
+  /// Punto (x, y, z in cm) attorno a cui si ruota e che sta al centro della
+  /// vista. Di norma e' il centro del corpo; la guida alle misure lo sposta
+  /// sul distretto da mostrare.
+  final List<double>? focus;
   late final double cy = math.cos(yaw);
   late final double sy = math.sin(yaw);
   static const double pitch = 0.08;
@@ -163,12 +168,14 @@ class TwinProjector {
       math.min(size.height * 0.90 / height, size.width * 0.62 / (height * 0.5)) * zoom;
   late final double ox = -size.width * 0.08;
 
-  TwinProjector(this.yaw, this.zoom, this.size, this.height);
+  TwinProjector(this.yaw, this.zoom, this.size, this.height, {this.focus});
 
   Offset project(double x, double y, double z) {
-    final py = y - height * 0.5;
-    final x1 = x * cy + z * sy;
-    final z1 = -x * sy + z * cy;
+    final px = x - (focus?[0] ?? 0.0);
+    final py = y - (focus?[1] ?? height * 0.5);
+    final pz = z - (focus?[2] ?? 0.0);
+    final x1 = px * cy + pz * sy;
+    final z1 = -px * sy + pz * cy;
     final y2 = py * cp - z1 * sp;
     final z2 = py * sp + z1 * cp;
     final k = base * d / (d - z2);
