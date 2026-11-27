@@ -31,7 +31,7 @@ class InputScreen extends StatefulWidget {
   /// Soggetto del registro: sesso e data di nascita vengono da qui.
   final Subject subject;
 
-  /// Ultima misura del soggetto: precompila l'anamnesi.
+  /// Ultima misura del soggetto: precompila l'anamnesi, l'altezza, il polso e il collo.
   final Record? template;
 
   /// Misura da correggere: precompila tutti i campi e ne mantiene id e data.
@@ -60,6 +60,15 @@ class _InputScreenState extends State<InputScreen> {
       _parents = t.an.parentsHypertensive;
       _drugs = t.an.onAntihypertensives;
     }
+    // Nuova misura di un soggetto gia' misurato: altezza, polso e collo non
+    // cambiano da una visita all'altra, quindi si precompilano dall'ultima.
+    // Restano modificabili.
+    final prev = widget.template;
+    if (widget.edit == null && prev != null) {
+      for (final e in {'height': prev.m.height, 'wrist': prev.m.wrist, 'neck': prev.m.neck}.entries) {
+        _ctrl[e.key]!.text = _fmt(e.value);
+      }
+    }
     final e = widget.edit;
     if (e != null) {
       final m = e.m;
@@ -76,10 +85,12 @@ class _InputScreenState extends State<InputScreen> {
         'hr': m.hr,
       };
       vals.forEach((k, v) {
-        _ctrl[k]!.text = v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toString();
+        _ctrl[k]!.text = _fmt(v);
       });
     }
   }
+
+  static String _fmt(double v) => v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toString();
 
   @override
   void dispose() {
