@@ -225,27 +225,41 @@ Report computeReport(Measurements m, Anamnesis an, AbsiTable absi) {
   add(gA, 'CALFCORR', 'Circonferenza del polpaccio corretta per BMI', _f(calfCorr),
       unit: 'cm', reference: '> ${_f(calfCut)}', comment: calfC.label, sev: calfC.sev);
 
-  // Collo: conta solo come criteri STOP-BANG per le apnee notturne (BMI classico
-  // > 35 e collo > 40 cm). Il sesso maschile e' un altro punto dello STOP-BANG,
-  // non una condizione: le donne ne soffrono comunque. Rosso se i due criteri
-  // del corpo sono presenti, in entrambi i sessi.
+  // Collo e STOP-BANG (apnee notturne). Il collo da solo non dice nulla: ha
+  // senso solo dentro il punteggio del questionario (0-8, un punto a voce):
+  // russamento, stanchezza, apnee osservate, pressione alta (terapia, diagnosi
+  // o pressione misurata da 140/90), BMI classico > 35, eta' > 50, collo > 40 cm,
+  // sesso maschile. 0-2 basso, 3-4 intermedio, 5-8 alto. Senza questionario
+  // nessun giudizio: il valore resta visibile.
   {
-    final stopBang = bmic > 35 && neck > 40;
-    final String comment;
-    if (stopBang) {
-      comment = 'Collo oltre 40 cm con BMI oltre 35: criteri STOP-BANG, '
-          'rischio di apnee notturne da valutare';
-    } else if (neck > 40) {
-      comment = 'Collo oltre 40 cm, ma con BMI non oltre 35: i due criteri STOP-BANG non sono entrambi presenti';
-    } else {
-      comment = 'Sotto la soglia di screening STOP-BANG';
-    }
-    final sev = stopBang ? Severity.alert : _ok;
     v['NECK'] = neck;
-    v['NECK_STOPBANG'] = stopBang ? 1.0 : 0.0;
-    body['neck'] = sev;
-    add(gA, 'NECK', 'Circonferenza del collo', _f(neck), unit: 'cm',
-        reference: '< 40', comment: comment, sev: sev);
+    const label = 'Circonferenza del collo e STOP-BANG';
+    if (an.stopBangAnswered) {
+      final htn = (an.answered && an.onAntihypertensives) ||
+          an.hypertensionDiagnosed ||
+          sbp >= 140 ||
+          dbp >= 90;
+      final score = [
+        an.snoring,
+        an.tired,
+        an.observedApnea,
+        htn,
+        bmic > 35,
+        age > 50,
+        neck > 40,
+        sex == 0,
+      ].where((x) => x).length;
+      v['STOPBANG'] = score.toDouble();
+      final Severity sev = score >= 5 ? _a : (score >= 3 ? _w : _ok);
+      final String rischio = score >= 5 ? 'alto' : (score >= 3 ? 'intermedio' : 'basso');
+      final String coda = score >= 3 ? ', da valutare con il medico' : '';
+      body['neck'] = sev;
+      add(gA, 'NECK', label, _f(neck), unit: 'cm',
+          comment: 'Punteggio STOP-BANG $score su 8: rischio $rischio di apnee notturne$coda', sev: sev);
+    } else {
+      add(gA, 'NECK', label, _f(neck), unit: 'cm',
+          comment: 'STOP-BANG non valutabile: manca il questionario nell\'anamnesi', sev: Severity.info);
+    }
   }
 
   // ---------------------------------------------------------------- Rischio addominale

@@ -182,11 +182,6 @@ CommentSection _pesoMorfotipo(Report r, Profilo p) {
     parts.add('Il BMI è $bmi, nella fascia $fascia$coda. Il morfotipo è $morfo.');
   }
 
-  if (_num(r, 'NECK_STOPBANG') > 0) {
-    parts.add('Il collo supera 40 cm con BMI oltre 35: sono due dei criteri dello STOP-BANG '
-        'per le apnee notturne, da valutare con il medico.');
-    esito = Esito.daApprofondire;
-  }
   if (_off(r, 'CALFCORR')) {
     parts.add('Il polpaccio, corretto per il BMI, è sotto la soglia di riferimento per la massa muscolare.');
     esito = _max(esito, _fromSev(_sev(r, 'CALFCORR')));
@@ -378,6 +373,18 @@ CommentSection _cuore(Report r, Profilo p) {
     parts.add('Alcuni indici derivati (${_elenco([for (final d in fuori) d.$2])}) sono fuori riferimento.');
     for (final d in fuori) {
       esito = _max(esito, _fromSev(_sev(r, d.$1)));
+    }
+  }
+
+  // Apnee notturne: punteggio STOP-BANG, solo se il questionario e' compilato.
+  if (r.values.containsKey('STOPBANG')) {
+    final sb = _num(r, 'STOPBANG').round();
+    if (sb >= 5) {
+      parts.add('Il punteggio STOP-BANG è $sb su 8: rischio alto di apnee notturne, da valutare con il medico.');
+      esito = Esito.daApprofondire;
+    } else if (sb >= 3) {
+      parts.add('Il punteggio STOP-BANG è $sb su 8: rischio intermedio di apnee notturne, da valutare con il medico.');
+      esito = _max(esito, Esito.daOsservare);
     }
   }
 

@@ -49,6 +49,11 @@ class _InputScreenState extends State<InputScreen> {
   bool _smoker = false;
   int _parents = 0;
   bool _drugs = false;
+  bool _stopBang = false;
+  bool _snoring = false;
+  bool _tired = false;
+  bool _apnea = false;
+  bool _htDiag = false;
 
   @override
   void initState() {
@@ -59,6 +64,11 @@ class _InputScreenState extends State<InputScreen> {
       _smoker = t.an.smoker;
       _parents = t.an.parentsHypertensive;
       _drugs = t.an.onAntihypertensives;
+      _stopBang = t.an.stopBangAnswered;
+      _snoring = t.an.snoring;
+      _tired = t.an.tired;
+      _apnea = t.an.observedApnea;
+      _htDiag = t.an.hypertensionDiagnosed;
     }
     // Nuova misura di un soggetto gia' misurato: altezza, polso e collo non
     // cambiano da una visita all'altra, quindi si precompilano dall'ultima.
@@ -120,6 +130,11 @@ class _InputScreenState extends State<InputScreen> {
       _smoker = false;
       _parents = 1;
       _drugs = false;
+      _stopBang = false;
+      _snoring = false;
+      _tired = false;
+      _apnea = false;
+      _htDiag = false;
     });
     _form.currentState?.validate();
   }
@@ -156,6 +171,11 @@ class _InputScreenState extends State<InputScreen> {
       smoker: _anamnesis && _smoker,
       parentsHypertensive: _anamnesis ? _parents : 0,
       onAntihypertensives: _anamnesis && _drugs,
+      stopBangAnswered: _stopBang,
+      snoring: _stopBang && _snoring,
+      tired: _stopBang && _tired,
+      observedApnea: _stopBang && _apnea,
+      hypertensionDiagnosed: _stopBang && _htDiag,
     );
     Navigator.of(context).pop(Record(widget.edit?.id ?? now.microsecondsSinceEpoch.toString(), m, an,
         subjectId: widget.subject.id));
@@ -238,6 +258,40 @@ class _InputScreenState extends State<InputScreen> {
                 title: const Text('In terapia antipertensiva'),
                 value: _drugs,
                 onChanged: (v) => setState(() => _drugs = v),
+              ),
+            ],
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Aggiungi il questionario STOP-BANG (facoltativo)'),
+              subtitle: const Text('Serve al punteggio per le apnee notturne. Il collo, l\'et\u00e0, il sesso e il BMI vengono dalle misure.'),
+              value: _stopBang,
+              onChanged: (v) => setState(() => _stopBang = v),
+            ),
+            if (_stopBang) ...[
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Russi forte (si sente oltre la porta chiusa)'),
+                value: _snoring,
+                onChanged: (v) => setState(() => _snoring = v),
+              ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Ti senti spesso stanco o assonnato di giorno'),
+                value: _tired,
+                onChanged: (v) => setState(() => _tired = v),
+              ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Qualcuno ha osservato pause del respiro nel sonno'),
+                value: _apnea,
+                onChanged: (v) => setState(() => _apnea = v),
+              ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Ipertensione diagnosticata (anche senza terapia)'),
+                subtitle: const Text('La terapia antipertensiva e la pressione misurata contano gi\u00e0.'),
+                value: _htDiag,
+                onChanged: (v) => setState(() => _htDiag = v),
               ),
             ],
             const SizedBox(height: 16),

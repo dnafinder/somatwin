@@ -77,6 +77,11 @@ const kCsvRawColumns = [
   'fumatore',
   'genitori_ipertesi',
   'antipertensivi',
+  'stopbang_compilato',
+  'russamento',
+  'stanchezza',
+  'apnee_osservate',
+  'ipertensione_diagnosticata',
 ];
 
 String _isoDate(DateTime d) =>
@@ -131,6 +136,11 @@ String subjectCsv(List<Record> records, AbsiTable absi) {
       _bit(an.smoker),
       an.parentsHypertensive.toString(),
       _bit(an.onAntihypertensives),
+      _bit(an.stopBangAnswered),
+      _bit(an.snoring),
+      _bit(an.tired),
+      _bit(an.observedApnea),
+      _bit(an.hypertensionDiagnosed),
       for (final k in keys) byKey[k] ?? '',
     ];
     out.write('\r\n');

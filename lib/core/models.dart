@@ -120,11 +120,25 @@ class Anamnesis {
   final int parentsHypertensive;
   final bool onAntihypertensives;
 
+  /// Questionario STOP-BANG compilato. Le voci che le misure non danno:
+  /// russamento forte, stanchezza diurna, apnee osservate, ipertensione
+  /// diagnosticata (anche senza terapia).
+  final bool stopBangAnswered;
+  final bool snoring;
+  final bool tired;
+  final bool observedApnea;
+  final bool hypertensionDiagnosed;
+
   const Anamnesis({
     this.answered = false,
     this.smoker = false,
     this.parentsHypertensive = 0,
     this.onAntihypertensives = false,
+    this.stopBangAnswered = false,
+    this.snoring = false,
+    this.tired = false,
+    this.observedApnea = false,
+    this.hypertensionDiagnosed = false,
   });
 
   Map<String, dynamic> toJson() => {
@@ -132,6 +146,11 @@ class Anamnesis {
         'smoker': smoker,
         'php': parentsHypertensive,
         'hp': onAntihypertensives,
+        'sba': stopBangAnswered,
+        'snr': snoring,
+        'tir': tired,
+        'apn': observedApnea,
+        'htd': hypertensionDiagnosed,
       };
 
   factory Anamnesis.fromJson(Map<String, dynamic> j) => Anamnesis(
@@ -139,6 +158,12 @@ class Anamnesis {
         smoker: j['smoker'] as bool,
         parentsHypertensive: (j['php'] as num).toInt(),
         onAntihypertensives: j['hp'] as bool,
+        // Salvataggi precedenti non hanno il questionario.
+        stopBangAnswered: j['sba'] as bool? ?? false,
+        snoring: j['snr'] as bool? ?? false,
+        tired: j['tir'] as bool? ?? false,
+        observedApnea: j['apn'] as bool? ?? false,
+        hypertensionDiagnosed: j['htd'] as bool? ?? false,
       );
 }
 

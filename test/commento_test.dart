@@ -105,7 +105,6 @@ void main() {
     test('muscolare: BMI alto compatibile con massa muscolare, frequenza coerente', () {
       final c = _comment(_muscolare);
       expect(_sec(c, 'Peso e morfotipo').text, contains('compatibile con una massa muscolare importante'));
-      expect(_sec(c, 'Peso e morfotipo').text, isNot(contains('STOP-BANG')));
       expect(_sec(c, 'Peso e morfotipo').esito, Esito.favorevole);
       final cuore = _sec(c, 'Cuore e pressione');
       expect(cuore.text, contains('compatibile con un condizionamento atletico'));
@@ -132,25 +131,58 @@ void main() {
   });
 
   group('collo e STOP-BANG', () {
+    // Soggetti inventati. obesoM: uomo di 50 anni (non > 50), BMI 39, collo 44,
+    // pressione 130/85: con il solo questionario vuoto valgono BMI, collo e sesso = 3.
     final obesoM = _m(age: 50, weight: 120, height: 175, waist: 125, hip: 115, wrist: 19, neck: 44, calf: 42, sbp: 130, dbp: 85, hr: 78);
     final obesoF = _m(age: 50, weight: 105, height: 160, waist: 110, hip: 120, wrist: 17, neck: 44, calf: 40, sbp: 130, dbp: 85, hr: 78, sex: Sex.female);
     final collo40M = _m(age: 40, weight: 90, height: 180, waist: 95, hip: 100, wrist: 18, neck: 42, calf: 40, sbp: 120, dbp: 80, hr: 70);
 
-    test('BMI > 35 e collo > 40: rosso e commento', () {
-      final r = computeReport(obesoM, const Anamnesis(), _table());
-      expect(r.byKey('NECK')!.severity, Severity.alert);
-      expect(r.values['NECK_STOPBANG'], 1.0);
-      expect(_sec(buildComment(r, obesoM), 'Peso e morfotipo').text, contains('STOP-BANG'));
+    Report rep(Measurements m, Anamnesis an) => computeReport(m, an, _table());
+
+    test('senza questionario: nessun giudizio sul collo', () {
+      final r = rep(obesoM, const Anamnesis());
+      expect(r.byKey('NECK')!.severity, Severity.info);
+      expect(r.values.containsKey('STOPBANG'), false);
+      expect(_sec(buildComment(r, obesoM), 'Cuore e pressione').text, isNot(contains('STOP-BANG')));
     });
-    test('donna con BMI > 35 e collo > 40: rosso come l\'uomo', () {
-      final r = computeReport(obesoF, const Anamnesis(), _table());
-      expect(r.byKey('NECK')!.severity, Severity.alert);
-      expect(r.values['NECK_STOPBANG'], 1.0);
+    test('uomo BMI > 35, collo > 40, questionario negativo: 3 punti, arancio', () {
+      final r = rep(obesoM, const Anamnesis(stopBangAnswered: true));
+      expect(r.values['STOPBANG'], 3);
+      expect(r.byKey('NECK')!.severity, Severity.watch);
+      final t = _sec(buildComment(r, obesoM), 'Cuore e pressione');
+      expect(t.text, contains('STOP-BANG è 3 su 8: rischio intermedio'));
     });
-    test('BMI <= 35 e collo > 40: non rosso', () {
-      final r = computeReport(collo40M, const Anamnesis(), _table());
+    test('russamento e stanchezza portano a 5: rosso e da approfondire', () {
+      final r = rep(obesoM, const Anamnesis(stopBangAnswered: true, snoring: true, tired: true));
+      expect(r.values['STOPBANG'], 5);
+      expect(r.byKey('NECK')!.severity, Severity.alert);
+      expect(_sec(buildComment(r, obesoM), 'Cuore e pressione').esito, Esito.daApprofondire);
+    });
+    test('donna: il sesso non conta, BMI e collo due punti, un sintomo li porta a 3', () {
+      expect(rep(obesoF, const Anamnesis(stopBangAnswered: true)).values['STOPBANG'], 2);
+      expect(rep(obesoF, const Anamnesis(stopBangAnswered: true, snoring: true)).values['STOPBANG'], 3);
+    });
+    test('collo > 40 con BMI normale: solo collo e sesso, rischio basso', () {
+      final r = rep(collo40M, const Anamnesis(stopBangAnswered: true));
+      expect(r.values['STOPBANG'], 2);
       expect(r.byKey('NECK')!.severity, Severity.ok);
-      expect(r.values['NECK_STOPBANG'], 0.0);
+    });
+    test('pressione alta: terapia, diagnosi o misura contano una volta sola', () {
+      final base = rep(collo40M, const Anamnesis(stopBangAnswered: true)).values['STOPBANG']!;
+      expect(rep(collo40M, const Anamnesis(stopBangAnswered: true, hypertensionDiagnosed: true)).values['STOPBANG'], base + 1);
+      expect(rep(collo40M, const Anamnesis(answered: true, onAntihypertensives: true, stopBangAnswered: true)).values['STOPBANG'], base + 1);
+      expect(rep(collo40M, const Anamnesis(answered: true, onAntihypertensives: true, hypertensionDiagnosed: true, stopBangAnswered: true)).values['STOPBANG'], base + 1);
+      final hot = _m(age: 40, weight: 90, height: 180, waist: 95, hip: 100, wrist: 18, neck: 42, calf: 40, sbp: 145, dbp: 80, hr: 70);
+      expect(rep(hot, const Anamnesis(stopBangAnswered: true)).values['STOPBANG'], base + 1);
+    });
+    test('salvataggi vecchi senza il questionario si leggono ancora', () {
+      final a = Anamnesis.fromJson({'answered': true, 'smoker': false, 'php': 1, 'hp': false});
+      expect(a.stopBangAnswered, false);
+      final b = Anamnesis.fromJson(const Anamnesis(stopBangAnswered: true, snoring: true, hypertensionDiagnosed: true).toJson());
+      expect(b.stopBangAnswered, true);
+      expect(b.snoring, true);
+      expect(b.hypertensionDiagnosed, true);
+      expect(b.tired, false);
     });
   });
 
