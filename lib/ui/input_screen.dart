@@ -100,19 +100,19 @@ class _InputScreenState extends State<InputScreen> {
     super.dispose();
   }
 
-  /// Misure del soggetto del referto CARDIOMET (maschio, 57 anni).
+  /// Misure di prova di un soggetto inventato.
   void _fillDemo() {
     const v = {
-      'weight': '87',
-      'height': '173',
-      'waist': '107',
-      'hip': '103',
-      'wrist': '18',
-      'neck': '40',
-      'calf': '38',
-      'sbp': '128',
-      'dbp': '87',
-      'hr': '61',
+      'weight': '76',
+      'height': '176',
+      'waist': '90',
+      'hip': '98',
+      'wrist': '17.5',
+      'neck': '38',
+      'calf': '37',
+      'sbp': '122',
+      'dbp': '78',
+      'hr': '68',
     };
     setState(() {
       v.forEach((k, t) => _ctrl[k]!.text = t);
